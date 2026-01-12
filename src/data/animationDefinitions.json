@@ -1,0 +1,32 @@
+[
+  {
+    "id": "jump",
+    "name": "ジャンプ",
+    "action": "2秒に1回ジャンプする",
+    "effect": { "type": "jump", "power": 1 },
+    "durationSec": 1,
+    "intervalSec": 2,
+    "startDelaySec": 1,
+    "priority": 5
+  },
+  {
+    "id": "double-jump",
+    "name": "2段ジャンプ",
+    "action": "5秒に1回2段ジャンプする",
+    "effect": { "type": "double-jump", "power": 1 },
+    "durationSec": 1.7,
+    "intervalSec": 5,
+    "startDelaySec": 1,
+    "priority": 5
+  },
+  {
+    "id": "stop",
+    "name": "ストップ",
+    "action": "4秒に1回、2秒間その場で止まる",
+    "effect": { "type": "stop" },
+    "durationSec": 2,
+    "intervalSec": 4,
+    "startDelaySec": 1,
+    "priority": 5
+  }
+]

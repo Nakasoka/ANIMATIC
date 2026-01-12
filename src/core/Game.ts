@@ -1,11 +1,20 @@
 import { Loop } from "./Loop.js";
 import { Renderer } from "./Renderer.js";
 import { stages } from "../data/stages.js";
-import { getAnimationsById } from "../data/animations.js";
+import { animationDefinitions, buildAnimationClips } from "../data/animations.js";
 import { Player } from "../entities/Player.js";
 import { AnimationSystem } from "../systems/AnimationSystem.js";
 import { PhysicsSystem } from "../systems/PhysicsSystem.js";
 import { StageData, VisualState } from "./types.js";
+import { UiController } from "../ui/UiController.js";
+
+type GameState =
+  | "stage_select"
+  | "selecting"
+  | "playing"
+  | "paused"
+  | "cleared"
+  | "gameover";
 
 export class Game {
   private loop: Loop;
@@ -16,17 +25,35 @@ export class Game {
   private renderer: Renderer;
   private timeMs = 0;
   private visuals: VisualState = { color: "#f5f5f5", scale: 1 };
+  private state: GameState = "stage_select";
+  private ui: UiController;
+  private baseMoveSpeed = 110;
+  private selectedStageId = "tutorial";
+  private clearedStages = new Set<string>();
 
-  constructor(canvas: HTMLCanvasElement) {
+  constructor(canvas: HTMLCanvasElement, ui: UiController) {
     this.stage = stages[0];
-    const animations = getAnimationsById(this.stage.animationIds);
+    const animations = buildAnimationClips(["jump"]);
     this.player = new Player(this.stage.playerStart.x, this.stage.playerStart.y);
     this.animationSystem = new AnimationSystem(animations);
     this.physicsSystem = new PhysicsSystem();
     this.renderer = new Renderer(canvas, this.stage);
     this.loop = new Loop(this.update, this.render);
+    this.ui = ui;
 
-    window.addEventListener("keydown", this.onKeyDown);
+    this.ui.setAnimationOptions(animationDefinitions);
+    this.ui.setMaxSelectionCount(this.stage.maxSelectionCount);
+    this.ui.onPause = this.pause;
+    this.ui.onContinue = this.resume;
+    this.ui.onRetry = this.retry;
+    this.ui.onPlayAgain = this.playAgain;
+    this.ui.onStartSelection = this.startFromSelection;
+    this.ui.onPreviewStage = this.previewStage;
+    this.ui.onBackToSelection = this.backToSelection;
+    this.ui.onStageSelected = this.selectStage;
+    this.ui.onBackToStageSelect = this.backToStageSelect;
+    this.ui.setStageProgress(this.clearedStages);
+    this.ui.showStageSelect();
   }
 
   start() {
@@ -34,6 +61,7 @@ export class Game {
   }
 
   private update = (dt: number) => {
+    if (this.state !== "playing") return;
     this.timeMs += dt * 1000;
     const { visuals, effects } = this.animationSystem.sample(this.timeMs);
     this.visuals = {
@@ -41,17 +69,83 @@ export class Game {
       scale: 1,
       ...visuals
     };
+    if (!effects.velocityOverride) effects.velocityOverride = {};
+    if (effects.velocityOverride.x === undefined) {
+      effects.velocityOverride.x = this.baseMoveSpeed;
+    }
     this.physicsSystem.update(dt, this.player, effects, this.stage);
+    if (this.player.x + this.player.width >= this.stage.goalX) {
+      this.state = "cleared";
+      this.clearedStages.add(this.selectedStageId);
+      this.ui.setStageProgress(this.clearedStages);
+      this.ui.showClear();
+    }
+    if (this.player.y > this.stage.size.height + 60) {
+      this.state = "gameover";
+      this.ui.showGameOver();
+    }
   };
 
   private render = () => {
     this.renderer.render(this.player, this.visuals, this.timeMs);
   };
 
-  private onKeyDown = (event: KeyboardEvent) => {
-    if (event.key.toLowerCase() === "r") {
-      this.reset();
-    }
+  private pause = () => {
+    if (this.state !== "playing") return;
+    this.state = "paused";
+    this.ui.showPause();
+  };
+
+  private resume = () => {
+    if (this.state !== "paused") return;
+    this.state = "playing";
+    this.ui.showPlaying();
+  };
+
+  private retry = () => {
+    this.reset();
+    this.state = "selecting";
+    this.ui.showSelection();
+  };
+
+  private playAgain = () => {
+    this.reset();
+    this.state = "selecting";
+    this.ui.showSelection();
+  };
+
+  private previewStage = () => {
+    if (this.state !== "selecting") return;
+    this.state = "paused";
+    this.ui.showStagePreview();
+    this.ui.renderStagePreview((ctx) => this.renderer.renderStagePreview(ctx));
+  };
+
+  private backToSelection = () => {
+    if (this.state !== "paused") return;
+    this.state = "selecting";
+    this.ui.showSelection();
+  };
+
+  private backToStageSelect = () => {
+    if (this.state !== "selecting") return;
+    this.state = "stage_select";
+    this.ui.showStageSelect();
+  };
+
+  private selectStage = (stageId: string) => {
+    if (this.state !== "stage_select") return;
+    this.selectedStageId = stageId;
+    this.state = "selecting";
+    this.ui.showSelection();
+  };
+
+  private startFromSelection = (optionIds: string[]) => {
+    const ids = optionIds.length > 0 ? optionIds : ["jump"];
+    this.animationSystem = new AnimationSystem(buildAnimationClips(ids));
+    this.reset();
+    this.state = "playing";
+    this.ui.showPlaying();
   };
 
   private reset() {

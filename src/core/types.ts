@@ -5,6 +5,8 @@ export interface StageData {
   name: string;
   size: { width: number; height: number };
   groundY: number;
+  holes: Array<{ x: number; width: number }>;
+  maxSelectionCount: number;
   playerStart: { x: number; y: number };
   goalX: number;
   animationIds: string[];

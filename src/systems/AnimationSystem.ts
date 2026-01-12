@@ -10,6 +10,8 @@ import {
 type PriorityMap = Record<string, number>;
 
 export class AnimationSystem {
+  private previousTimeMs = 0;
+
   constructor(private clips: AnimationClip[]) {}
 
   sample(timeMs: number): { visuals: Partial<VisualState>; effects: EffectState } {
@@ -17,14 +19,23 @@ export class AnimationSystem {
     const effects: EffectState = {};
     const visualPriority: PriorityMap = {};
     const effectPriority: PriorityMap = {};
+    let previousTime = this.previousTimeMs;
+    if (timeMs < previousTime) {
+      previousTime = 0;
+    }
 
     for (const clip of this.clips) {
       if (clip.durationMs <= 0) continue;
-      if (timeMs < clip.startMs || timeMs > clip.startMs + clip.durationMs) {
+      const isImpulse = clip.durationMs <= 20;
+      if (isImpulse) {
+        if (clip.startMs < previousTime || clip.startMs > timeMs) {
+          continue;
+        }
+      } else if (timeMs < clip.startMs || timeMs > clip.startMs + clip.durationMs) {
         continue;
       }
 
-      const localT = (timeMs - clip.startMs) / clip.durationMs;
+      const localT = isImpulse ? 0 : (timeMs - clip.startMs) / clip.durationMs;
 
       if (clip.visuals) {
         for (const track of clip.visuals) {
@@ -62,6 +73,7 @@ export class AnimationSystem {
       }
     }
 
+    this.previousTimeMs = timeMs;
     return { visuals, effects };
   }
 }

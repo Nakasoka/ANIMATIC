@@ -8,8 +8,193 @@ body {
   font-family: system-ui, sans-serif;
 }
 
+#gameRoot {
+  position: relative;
+}
+
 canvas {
   background: rgba(255, 255, 255, 0.02);
   border: 1px solid #2a2a35;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+}
+
+#ui {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.ui-button {
+  pointer-events: auto;
+  background: #1f1f28;
+  color: #f5f5f5;
+  border: 1px solid #3a3a48;
+  padding: 8px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.ui-button:hover {
+  border-color: #6a6a7a;
+}
+
+.is-hidden {
+  display: none;
+}
+
+#pauseButton {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+}
+
+.ui-modal {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(6, 6, 10, 0.6);
+  pointer-events: auto;
+}
+
+.ui-modal.is-hidden {
+  display: none;
+}
+
+.ui-card {
+  min-width: 540px;
+  background: #15151d;
+  border: 1px solid #2e2e3a;
+  border-radius: 10px;
+  padding: 18px;
+  color: #e8e8e8;
+  text-align: center;
+  position: relative;
+}
+
+.ui-card h2 {
+  margin: 0 0 12px 0;
+  font-size: 18px;
+}
+
+.ui-back-button {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+}
+
+.ui-card canvas {
+  width: 100%;
+  max-width: 620px;
+  height: auto;
+  border: 1px solid #2e2e3a;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.2);
+  margin-bottom: 10px;
+}
+
+.ui-stage-card {
+  min-width: 720px;
+}
+
+.ui-stage-card canvas {
+  max-width: 900px;
+}
+
+.ui-hint {
+  margin: 0 0 12px 0;
+  font-size: 12px;
+  color: #b9b9c6;
+}
+
+.ui-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(140px, 1fr));
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.ui-option-card {
+  border: 1px solid #2e2e3a;
+  border-radius: 10px;
+  padding: 12px;
+  background: #101018;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+
+.ui-option-card:hover {
+  border-color: #6a6a7a;
+}
+
+.ui-option-title {
+  display: none;
+}
+
+.ui-preview {
+  height: 120px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+  position: relative;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.ui-preview canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.ui-preview-label {
+  position: absolute;
+  top: 2px;
+  right: 6px;
+  background: rgba(17, 17, 24, 0.8);
+  border: 1px solid #2f2f3d;
+  border-radius: 6px;
+  padding: 2px 6px;
+  font-size: 11px;
+  color: #e8e8e8;
+}
+
+.ui-order {
+  display: flex;
+  gap: 6px;
+  min-height: 18px;
+}
+
+.ui-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  font-size: 11px;
+  background: #2c2c3a;
+  color: #ffd166;
+}
+
+.ui-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.ui-footer-left {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-start;
+}
+
+.ui-footer-right {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
 }
