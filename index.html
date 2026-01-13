@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -34,6 +34,9 @@
               <button id="resetButton" class="ui-button">Reset</button>
               <button id="undoButton" class="ui-button">Undo</button>
             </div>
+            <div class="ui-footer-center">
+              <p id="selectionCountHint" class="ui-hint"></p>
+            </div>
             <div class="ui-footer-right">
               <button id="previewStageButton" class="ui-button">Stage</button>
               <button id="startButton" class="ui-button">Start</button>
@@ -53,7 +56,7 @@
         <div class="ui-card">
           <h2>Stage Preview</h2>
           <canvas id="stagePreviewCanvas" width="800" height="450"></canvas>
-          <p class="ui-hint">テストステージ全体を表示しています。</p>
+          <p class="ui-hint">ステージ全体を表示しています。</p>
           <button id="backToSelectionButton" class="ui-button">Back</button>
         </div>
       </div>
@@ -62,3 +65,4 @@
   <script type="module" src="dist/main.js"></script>
 </body>
 </html>
+

@@ -12,6 +12,7 @@ export class UiController {
   onContinue: (() => void) | null = null;
   onRetry: (() => void) | null = null;
   onPlayAgain: (() => void) | null = null;
+  onClearToStageSelect: (() => void) | null = null;
   onPreviewStage: (() => void) | null = null;
   onBackToSelection: (() => void) | null = null;
   onStartSelection: ((ids: string[]) => void) | null = null;
@@ -22,6 +23,7 @@ export class UiController {
   private selectionModal: HTMLDivElement;
   private stageSelectModal: HTMLDivElement;
   private selectionList: HTMLDivElement;
+  private selectionCountHint: HTMLParagraphElement;
   private startButton: HTMLButtonElement;
   private resetButton: HTMLButtonElement;
   private undoButton: HTMLButtonElement;
@@ -49,6 +51,7 @@ export class UiController {
     const selectionModal = root.querySelector("#selectionModal");
     const stageSelectModal = root.querySelector("#stageSelectModal");
     const selectionList = root.querySelector("#selectionList");
+    const selectionCountHint = root.querySelector("#selectionCountHint");
     const startButton = root.querySelector("#startButton");
     const resetButton = root.querySelector("#resetButton");
     const undoButton = root.querySelector("#undoButton");
@@ -67,6 +70,7 @@ export class UiController {
       !(stageSelectModal instanceof HTMLDivElement) ||
       !(selectionModal instanceof HTMLDivElement) ||
       !(selectionList instanceof HTMLDivElement) ||
+      !(selectionCountHint instanceof HTMLParagraphElement) ||
       !(startButton instanceof HTMLButtonElement) ||
       !(resetButton instanceof HTMLButtonElement) ||
       !(undoButton instanceof HTMLButtonElement) ||
@@ -87,6 +91,7 @@ export class UiController {
     this.stageSelectModal = stageSelectModal;
     this.selectionModal = selectionModal;
     this.selectionList = selectionList;
+    this.selectionCountHint = selectionCountHint;
     this.startButton = startButton;
     this.resetButton = resetButton;
     this.undoButton = undoButton;
@@ -108,9 +113,10 @@ export class UiController {
     this.statusButtons = statusButtons;
 
     this.pauseButton.addEventListener("click", () => this.onPause?.());
-    this.startButton.addEventListener("click", () =>
-      this.onStartSelection?.([...this.selectedIds])
-    );
+    this.startButton.addEventListener("click", () => {
+      if (this.selectedIds.length !== this.maxSelectionCount) return;
+      this.onStartSelection?.([...this.selectedIds]);
+    });
     this.resetButton.addEventListener("click", () => this.resetSelection());
     this.undoButton.addEventListener("click", () => this.undoSelection());
     this.previewStageButton.addEventListener("click", () =>
@@ -163,7 +169,7 @@ export class UiController {
       this.selectionList.appendChild(card);
       this.cardMap.set(option.id, { orderRow, preview });
     }
-    this.renderOrder();
+    this.resetSelection();
   }
 
   showSelection() {
@@ -210,6 +216,11 @@ export class UiController {
     this.statusButtons.appendChild(
       this.createStatusButton("Play Again（もう一度プレイする）", () =>
         this.onPlayAgain?.()
+      )
+    );
+    this.statusButtons.appendChild(
+      this.createStatusButton("ステージ選択に戻る", () =>
+        this.onClearToStageSelect?.()
       )
     );
     this.statusModal.classList.remove("is-hidden");
@@ -263,6 +274,10 @@ export class UiController {
 
   setMaxSelectionCount(count: number) {
     this.maxSelectionCount = Math.max(1, count);
+    if (this.selectedIds.length > this.maxSelectionCount) {
+      this.selectedIds = this.selectedIds.slice(0, this.maxSelectionCount);
+    }
+    this.renderOrder();
   }
 
   private resetSelection() {
@@ -288,6 +303,9 @@ export class UiController {
       badge.textContent = String(index + 1);
       entry.orderRow.appendChild(badge);
     });
+    const count = this.selectedIds.length;
+    this.selectionCountHint.textContent = `選択数: ${count} / ${this.maxSelectionCount}`;
+    this.startButton.disabled = count !== this.maxSelectionCount;
   }
 
   private createStatusButton(label: string, onClick: () => void) {
@@ -407,7 +425,7 @@ class PreviewRunner {
       this.definition.effect.type === "double-jump"
         ? this.doubleJumpGroundY
         : this.groundY;
-    const targetScreenY = this.canvas.height * 0.8;
+    const targetScreenY = this.canvas.height * 0.86;
     const translateY = targetScreenY - groundY * this.previewScale;
     ctx.translate(0, translateY);
     ctx.scale(this.previewScale, this.previewScale);
@@ -442,8 +460,11 @@ class PreviewRunner {
       groundY,
       holes: [],
       maxSelectionCount: 1,
+      animationChoices: [],
       playerStart: { x: 20, y: groundY - this.player.height },
-      goalX: 9999,
+      goal: { x: 9999, y: 0, height: 0 },
+      platforms: [],
+      obstacles: [],
       animationIds: []
     };
   }

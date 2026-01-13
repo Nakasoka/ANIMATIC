@@ -29,13 +29,18 @@ canvas {
   background: #1f1f28;
   color: #f5f5f5;
   border: 1px solid #3a3a48;
-  padding: 8px 14px;
+  padding: 6px 12px;
   border-radius: 6px;
   cursor: pointer;
 }
 
 .ui-button:hover {
   border-color: #6a6a7a;
+}
+
+.ui-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
 }
 
 .is-hidden {
@@ -110,15 +115,18 @@ canvas {
 
 .ui-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(140px, 1fr));
+  grid-template-columns: repeat(2, minmax(160px, 1fr));
   gap: 12px;
   margin-bottom: 12px;
+  max-height: 360px;
+  overflow-y: auto;
+  padding-right: 6px;
 }
 
 .ui-option-card {
   border: 1px solid #2e2e3a;
   border-radius: 10px;
-  padding: 12px;
+  padding: 10px;
   background: #101018;
   cursor: pointer;
   transition: border-color 0.2s ease;
@@ -185,6 +193,7 @@ canvas {
   display: flex;
   justify-content: space-between;
   gap: 8px;
+  align-items: center;
 }
 
 .ui-footer-left {
@@ -197,4 +206,14 @@ canvas {
   display: flex;
   gap: 8px;
   justify-content: flex-end;
+}
+
+.ui-footer-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ui-footer-center .ui-hint {
+  margin: 0;
 }

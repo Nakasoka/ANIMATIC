@@ -7,10 +7,40 @@ export interface StageData {
   groundY: number;
   holes: Array<{ x: number; width: number }>;
   maxSelectionCount: number;
+  animationChoices: string[];
   playerStart: { x: number; y: number };
-  goalX: number;
+  goal: GoalLine;
+  platforms: Rect[];
+  obstacles: FallingSpikeDefinition[];
   animationIds: string[];
 }
+
+export interface Rect {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+export interface GoalLine {
+  x: number;
+  y: number;
+  height: number;
+}
+
+export interface FallingSpikeDefinition {
+  id: string;
+  type: "falling_spike";
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  trigger: Rect;
+  fallSpeed: number;
+}
+
+export type ObstacleState =
+  | (FallingSpikeDefinition & { state: "idle" | "falling" | "gone" });
 
 export interface AnimationClip {
   id: string;

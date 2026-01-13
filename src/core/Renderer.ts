@@ -1,4 +1,4 @@
-import { StageData, VisualState } from "./types.js";
+import { ObstacleState, StageData, VisualState } from "./types.js";
 import { Player } from "../entities/Player.js";
 
 export class Renderer {
@@ -16,11 +16,16 @@ export class Renderer {
     this.canvas.height = stage.size.height;
   }
 
-  render(player: Player, visuals: VisualState, timeMs: number) {
+  render(
+    player: Player,
+    visuals: VisualState,
+    timeMs: number,
+    obstacles: ObstacleState[]
+  ) {
     const { ctx } = this;
     ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-    this.renderStageBase(ctx);
+    this.renderStageBase(ctx, obstacles);
 
     const scale = visuals.scale ?? 1;
     const drawWidth = player.width * scale;
@@ -70,10 +75,16 @@ export class Renderer {
 
   renderStagePreview(ctx: CanvasRenderingContext2D) {
     ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-    this.renderStageBase(ctx);
+    const previewObstacles: ObstacleState[] = this.stage.obstacles.map(
+      (obstacle) => ({
+        ...obstacle,
+        state: "idle"
+      })
+    );
+    this.renderStageBase(ctx, previewObstacles);
   }
 
-  private renderStageBase(ctx: CanvasRenderingContext2D) {
+  private renderStageBase(ctx: CanvasRenderingContext2D, obstacles: ObstacleState[]) {
     ctx.fillStyle = "#0f0f14";
     ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
@@ -89,7 +100,27 @@ export class Renderer {
       ctx.fillRect(hole.x, this.stage.groundY, hole.width, 50);
     }
 
-    ctx.fillStyle = "#3a3a48";
-    ctx.fillRect(this.stage.goalX - 4, this.stage.groundY - 60, 8, 60);
+    ctx.fillStyle = "#1a1a22";
+    for (const platform of this.stage.platforms) {
+      ctx.fillRect(platform.x, platform.y, platform.width, platform.height);
+    }
+
+    ctx.strokeStyle = "#e23b3b";
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(this.stage.goal.x, this.stage.goal.y);
+    ctx.lineTo(this.stage.goal.x, this.stage.goal.y + this.stage.goal.height);
+    ctx.stroke();
+
+    for (const obstacle of obstacles) {
+      if (obstacle.state === "gone") continue;
+      ctx.fillStyle = "#3b6ee2";
+      ctx.beginPath();
+      ctx.moveTo(obstacle.x + obstacle.width / 2, obstacle.y + obstacle.height);
+      ctx.lineTo(obstacle.x, obstacle.y);
+      ctx.lineTo(obstacle.x + obstacle.width, obstacle.y);
+      ctx.closePath();
+      ctx.fill();
+    }
   }
 }

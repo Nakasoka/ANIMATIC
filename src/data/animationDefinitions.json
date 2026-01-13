@@ -1,4 +1,4 @@
-[
+﻿[
   {
     "id": "jump",
     "name": "ジャンプ",
@@ -6,7 +6,7 @@
     "effect": { "type": "jump", "power": 1 },
     "durationSec": 1,
     "intervalSec": 2,
-    "startDelaySec": 1,
+    "startDelaySec": 0.5,
     "priority": 5
   },
   {
@@ -16,7 +16,7 @@
     "effect": { "type": "double-jump", "power": 1 },
     "durationSec": 1.7,
     "intervalSec": 5,
-    "startDelaySec": 1,
+    "startDelaySec": 0.5,
     "priority": 5
   },
   {
@@ -26,7 +26,18 @@
     "effect": { "type": "stop" },
     "durationSec": 2,
     "intervalSec": 4,
-    "startDelaySec": 1,
+    "startDelaySec": 0.5,
+    "priority": 5
+  },
+  {
+    "id": "move",
+    "name": "進む",
+    "action": "行動開始時に進んでいる方向に2秒間進む",
+    "effect": { "type": "move-right", "speed": 140 },
+    "durationSec": 1,
+    "intervalSec": 0,
+    "startDelaySec": 0.5,
     "priority": 5
   }
 ]
+

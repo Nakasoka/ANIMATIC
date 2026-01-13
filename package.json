@@ -5,5 +5,8 @@
   "scripts": {
     "build": "tsc",
     "watch": "tsc --watch"
+  },
+  "dependencies": {
+    "build": "^0.1.4"
   }
 }
