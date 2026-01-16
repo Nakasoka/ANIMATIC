@@ -1,4 +1,4 @@
-export type LinkStyle = "solid" | "dotted";
+﻿export type LinkStyle = "solid" | "dotted";
 
 export interface StageNode {
   id: string;
@@ -13,6 +13,7 @@ export interface StageLink {
   style: LinkStyle;
 }
 
+const DEV_UNLOCK_ALL_STAGES = true;
 const GRID_X = 140;
 const GRID_Y = 110;
 const ORIGIN_X = 220;
@@ -79,8 +80,7 @@ for (let col = 2; col <= 5; col += 1) {
   }
 }
 
-// 横方向の点線は斜めになるため、現状は描画しない。
-
+// 開発中は全ステージを選択可能にする。戻すときは false にする。
 export const stageNodes = nodes;
 export const stageLinks = links;
 
@@ -94,6 +94,7 @@ const parseStageId = (id: string) => {
 };
 
 export const isStageEnabled = (id: string, cleared: Set<string>) => {
+  if (DEV_UNLOCK_ALL_STAGES) return true;
   if (id === "tutorial") return true;
   const parsed = parseStageId(id);
   if (!parsed) return false;
@@ -120,3 +121,4 @@ export const getLinkStyleForProgress = (
   }
   return cleared.has(link.from) ? "solid" : "dotted";
 };
+

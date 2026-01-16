@@ -8,9 +8,25 @@ export class PhysicsSystem {
     player: Player,
     effects: EffectState,
     stage: StageData
-  ) {
+  ): boolean {
+    const desiredHeight =
+      effects.heightOverride !== undefined
+        ? effects.heightOverride
+        : player.baseHeight;
+    let crushed = false;
+    if (desiredHeight > player.height) {
+      const gap = this.getVerticalGap(player, stage);
+      if (gap < 21 || gap < desiredHeight) {
+        crushed = true;
+      }
+    }
+    if (desiredHeight !== player.height) {
+      player.y += player.height - desiredHeight;
+      player.height = desiredHeight;
+    }
     const previousX = player.x;
     const previousY = player.y;
+
     if (effects.positionOverride?.x !== undefined) {
       player.x = effects.positionOverride.x;
     }
@@ -30,6 +46,7 @@ export class PhysicsSystem {
 
     this.resolvePlatforms(previousX, previousY, player, stage);
     this.resolveGround(previousY, player, stage);
+    return crushed;
   }
 
   private resolvePlatforms(
@@ -95,5 +112,29 @@ export class PhysicsSystem {
       player.y = floor;
       if (player.vy > 0) player.vy = 0;
     }
+  }
+
+  private getVerticalGap(player: Player, stage: StageData) {
+    const playerLeft = player.x;
+    const playerRight = player.x + player.width;
+    const playerTop = player.y;
+    const playerBottom = player.y + player.height;
+    let floorY = stage.groundY;
+    let ceilingY = 0;
+
+    for (const platform of stage.platforms) {
+      const overlapsX =
+        playerRight > platform.x && playerLeft < platform.x + platform.width;
+      if (!overlapsX) continue;
+      if (platform.y >= playerBottom) {
+        floorY = Math.min(floorY, platform.y);
+      }
+      const platformBottom = platform.y + platform.height;
+      if (platformBottom <= playerTop) {
+        ceilingY = Math.max(ceilingY, platformBottom);
+      }
+    }
+
+    return floorY - ceilingY;
   }
 }

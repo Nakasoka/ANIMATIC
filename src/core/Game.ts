@@ -17,6 +17,7 @@ type GameState =
   | "stage_select"
   | "selecting"
   | "playing"
+  | "crush_pending"
   | "paused"
   | "cleared"
   | "gameover";
@@ -35,6 +36,9 @@ export class Game {
   private state: GameState = "stage_select";
   private ui: UiController;
   private baseMoveSpeed = 110;
+  private moveDirection = 1;
+  private lastReverseMs = -Infinity;
+  private crushElapsedMs = 0;
   private selectedStageId = "tutorial";
   private clearedStages = new Set<string>();
 
@@ -55,6 +59,7 @@ export class Game {
     this.ui.onContinue = this.resume;
     this.ui.onRetry = this.retry;
     this.ui.onPlayAgain = this.playAgain;
+    this.ui.onGameOverToStageSelect = this.backToStageSelectFromGameOver;
     this.ui.onClearToStageSelect = this.backToStageSelectFromClear;
     this.ui.onStartSelection = this.startFromSelection;
     this.ui.onPreviewStage = this.previewStage;
@@ -70,6 +75,14 @@ export class Game {
   }
 
   private update = (dt: number) => {
+    if (this.state === "crush_pending") {
+      this.crushElapsedMs += dt * 1000;
+      if (this.crushElapsedMs >= 1000) {
+        this.state = "gameover";
+        this.ui.showGameOver();
+      }
+      return;
+    }
     if (this.state !== "playing") return;
     this.timeMs += dt * 1000;
     const { visuals, effects } = this.animationSystem.sample(this.timeMs);
@@ -79,11 +92,33 @@ export class Game {
       ...visuals
     };
     if (!effects.velocityOverride) effects.velocityOverride = {};
-    if (effects.velocityOverride.x === undefined) {
-      effects.velocityOverride.x = this.baseMoveSpeed;
+    const reverseTriggered = effects.directionFlip !== undefined;
+    if (reverseTriggered && this.timeMs - this.lastReverseMs > 50) {
+      this.moveDirection *= -1;
+      this.lastReverseMs = this.timeMs;
+      if (this.player.vy < 0) this.player.vy = Math.abs(this.player.vy);
+      effects.velocityOverride.x = this.baseMoveSpeed * this.moveDirection;
     }
-    this.physicsSystem.update(dt, this.player, effects, this.stage);
+    if (
+      !reverseTriggered &&
+      effects.velocityOverride.x !== undefined &&
+      effects.velocityOverride.x !== 0
+    ) {
+      effects.velocityOverride.x =
+        Math.abs(effects.velocityOverride.x) * this.moveDirection;
+    }
+    if (effects.velocityOverride.x === undefined) {
+      effects.velocityOverride.x = this.baseMoveSpeed * this.moveDirection;
+    }
+    const crushed = this.physicsSystem.update(dt, this.player, effects, this.stage);
+    if (crushed) {
+      this.state = "crush_pending";
+      this.crushElapsedMs = 0;
+      this.player.deadEyes = true;
+      return;
+    }
     const hitGoal =
+      this.player.x <= this.stage.goal.x &&
       this.player.x + this.player.width >= this.stage.goal.x &&
       this.player.y + this.player.height >= this.stage.goal.y &&
       this.player.y <= this.stage.goal.y + this.stage.goal.height;
@@ -102,7 +137,11 @@ export class Game {
       this.state = "gameover";
       this.ui.showGameOver();
     }
-    if (this.player.x > this.stage.size.width) {
+    if (this.player.x > this.stage.size.width + this.player.width) {
+      this.state = "gameover";
+      this.ui.showGameOver();
+    }
+    if (this.player.x + this.player.width < 0) {
       this.state = "gameover";
       this.ui.showGameOver();
     }
@@ -136,7 +175,7 @@ export class Game {
   private retry = () => {
     this.reset();
     this.state = "selecting";
-    this.ui.showSelection();
+    this.ui.showSelection(true);
   };
 
   private playAgain = () => {
@@ -147,6 +186,13 @@ export class Game {
 
   private backToStageSelectFromClear = () => {
     if (this.state !== "cleared") return;
+    this.reset();
+    this.state = "stage_select";
+    this.ui.showStageSelect();
+  };
+
+  private backToStageSelectFromGameOver = () => {
+    if (this.state !== "gameover") return;
     this.reset();
     this.state = "stage_select";
     this.ui.showStageSelect();
@@ -183,9 +229,8 @@ export class Game {
     const nextStage = stages.find((stage) => stage.id === stageId) ?? stages[0];
     this.stage = nextStage;
     this.applySelectionOptions(this.stage);
-    this.player.reset(this.stage.playerStart.x, this.stage.playerStart.y);
-    this.obstacleSystem.reset(this.stage);
     this.renderer = new Renderer(this.canvas, this.stage);
+    this.reset();
   }
 
   private startFromSelection = (optionIds: string[]) => {
@@ -199,6 +244,9 @@ export class Game {
 
   private reset() {
     this.timeMs = 0;
+    this.moveDirection = 1;
+    this.lastReverseMs = -Infinity;
+    this.crushElapsedMs = 0;
     this.player.reset(this.stage.playerStart.x, this.stage.playerStart.y);
     this.obstacleSystem.reset(this.stage);
   }

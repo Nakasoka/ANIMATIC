@@ -123,6 +123,17 @@ canvas {
   padding-right: 6px;
 }
 
+#statusModal .ui-card {
+  min-width: 360px;
+}
+
+.ui-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+}
+
 .ui-option-card {
   border: 1px solid #2e2e3a;
   border-radius: 10px;

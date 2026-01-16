@@ -63,6 +63,10 @@ export class AnimationSystem {
             if (track.property === "x" || track.property === "y") {
               if (!effects.positionOverride) effects.positionOverride = {};
               effects.positionOverride[track.property] = value;
+            } else if (track.property === "dir") {
+              effects.directionFlip = value;
+            } else if (track.property === "height") {
+              effects.heightOverride = value;
             } else {
               if (!effects.velocityOverride) effects.velocityOverride = {};
               const axis = track.property === "vx" ? "x" : "y";

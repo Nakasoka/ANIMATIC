@@ -7,6 +7,8 @@ export type AnimationEffect =
   | { type: "double-jump"; power: number }
   | { type: "stop" }
   | { type: "move-right"; speed: number }
+  | { type: "reverse"; speed: number; downSpeed: number }
+  | { type: "crouch" }
   | { type: "grow-shrink" };
 
 export interface AnimationDefinition {
@@ -118,6 +120,42 @@ const addEffectClips = (
             keyframes: [
               { time: 0, value: 0 },
               { time: 1, value: 0 }
+            ]
+          }
+        ]
+      });
+      return;
+    case "reverse":
+      clips.push({
+        id: `${definition.id}-${startMs}`,
+        target: "player",
+        startMs,
+        durationMs: IMPULSE_DURATION_MS,
+        priority: definition.priority,
+        effects: [
+          {
+            property: "dir",
+            keyframes: [
+              { time: 0, value: -1 },
+              { time: 1, value: -1 }
+            ]
+          }
+        ]
+      });
+      return;
+    case "crouch":
+      clips.push({
+        id: `${definition.id}-${startMs}`,
+        target: "player",
+        startMs,
+        durationMs: actionDurationMs,
+        priority: definition.priority,
+        effects: [
+          {
+            property: "height",
+            keyframes: [
+              { time: 0, value: 18 },
+              { time: 1, value: 18 }
             ]
           }
         ]

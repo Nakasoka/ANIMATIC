@@ -63,7 +63,7 @@ export interface VisualTrack {
 }
 
 export interface EffectTrack {
-  property: "x" | "y" | "vx" | "vy";
+  property: "x" | "y" | "vx" | "vy" | "dir" | "height";
   keyframes: Array<Keyframe<number>>;
 }
 
@@ -75,4 +75,6 @@ export interface VisualState {
 export interface EffectState {
   positionOverride?: { x?: number; y?: number };
   velocityOverride?: { x?: number; y?: number };
+  directionFlip?: number;
+  heightOverride?: number;
 }

@@ -11,6 +11,7 @@ export class UiController {
   onPause: (() => void) | null = null;
   onContinue: (() => void) | null = null;
   onRetry: (() => void) | null = null;
+  onGameOverToStageSelect: (() => void) | null = null;
   onPlayAgain: (() => void) | null = null;
   onClearToStageSelect: (() => void) | null = null;
   onPreviewStage: (() => void) | null = null;
@@ -172,12 +173,16 @@ export class UiController {
     this.resetSelection();
   }
 
-  showSelection() {
+  showSelection(keepSelection = false) {
     this.pauseButton.classList.add("is-hidden");
     this.statusModal.classList.add("is-hidden");
     this.stageModal.classList.add("is-hidden");
     this.stageSelectModal.classList.add("is-hidden");
-    this.resetSelection();
+    if (!keepSelection) {
+      this.resetSelection();
+    } else {
+      this.renderOrder();
+    }
     this.selectionModal.classList.remove("is-hidden");
   }
 
@@ -235,6 +240,11 @@ export class UiController {
     this.statusButtons.innerHTML = "";
     this.statusButtons.appendChild(
       this.createStatusButton("Retry（リトライ）", () => this.onRetry?.())
+    );
+    this.statusButtons.appendChild(
+      this.createStatusButton("ステージ選択に戻る", () =>
+        this.onGameOverToStageSelect?.()
+      )
     );
     this.statusModal.classList.remove("is-hidden");
   }
@@ -330,6 +340,8 @@ class PreviewRunner {
   private preActionDelay = 0.5;
   private postActionDelay = 0.5;
   private baseMoveSpeed = 110;
+  private moveDirection = 1;
+  private lastReverseMs = -Infinity;
   private physicsSystem = new PhysicsSystem();
   private animationSystem: AnimationSystem;
   private player: Player;
@@ -366,7 +378,9 @@ class PreviewRunner {
   private reset() {
     this.previewScale = this.definition.effect.type === "double-jump" ? 0.45 : 0.65;
     this.stage = this.createStage();
-    this.player.reset(20, this.stage.groundY - this.player.height);
+    this.player.reset(20, this.stage.groundY - this.player.baseHeight);
+    this.moveDirection = 1;
+    this.lastReverseMs = -Infinity;
     this.elapsedMs = 0;
     this.animationSystem = new AnimationSystem(
       buildAnimationClips([this.definition.id], { startDelayOverrideSec: 0 })
@@ -398,10 +412,31 @@ class PreviewRunner {
       effects = this.animationSystem.sample(actionTimeMs).effects;
     }
     if (!effects.velocityOverride) effects.velocityOverride = {};
-    if (effects.velocityOverride.x === undefined) {
-      effects.velocityOverride.x = this.baseMoveSpeed;
+    const reverseTriggered = effects.directionFlip !== undefined;
+    if (reverseTriggered && this.elapsedMs - this.lastReverseMs > 50) {
+      this.moveDirection *= -1;
+      this.lastReverseMs = this.elapsedMs;
+      if (this.player.vy < 0) this.player.vy = Math.abs(this.player.vy);
+      effects.velocityOverride.x = this.baseMoveSpeed * this.moveDirection;
     }
-    this.physicsSystem.update(dt, this.player, effects, this.stage);
+    if (
+      !reverseTriggered &&
+      effects.velocityOverride.x !== undefined &&
+      effects.velocityOverride.x !== 0
+    ) {
+      effects.velocityOverride.x =
+        Math.abs(effects.velocityOverride.x) * this.moveDirection;
+    }
+    if (effects.velocityOverride.x === undefined) {
+      effects.velocityOverride.x = this.baseMoveSpeed * this.moveDirection;
+    }
+    const crushed = this.physicsSystem.update(dt, this.player, effects, this.stage);
+    if (crushed) {
+      this.reset();
+      this.draw();
+      this.rafId = requestAnimationFrame(this.tick);
+      return;
+    }
 
     if (this.player.x > this.stage.size.width + 10) {
       this.player.x = this.stage.size.width + 10;
@@ -450,6 +485,7 @@ class PreviewRunner {
       this.definition.effect.type === "double-jump"
         ? this.doubleJumpGroundY
         : this.groundY;
+    const baseHeight = this.player.baseHeight;
     return {
       id: "preview",
       name: "Preview",
@@ -461,7 +497,7 @@ class PreviewRunner {
       holes: [],
       maxSelectionCount: 1,
       animationChoices: [],
-      playerStart: { x: 20, y: groundY - this.player.height },
+      playerStart: { x: 20, y: groundY - baseHeight },
       goal: { x: 9999, y: 0, height: 0 },
       platforms: [],
       obstacles: [],
@@ -469,6 +505,7 @@ class PreviewRunner {
     };
   }
 }
+
 
 
 

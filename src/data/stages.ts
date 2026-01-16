@@ -11,7 +11,7 @@ export const stages: StageData[] = [
     ],
     maxSelectionCount: 3,
     animationChoices: ["jump", "double-jump", "stop"],
-    playerStart: { x: 80, y: 360 },
+    playerStart: { x: 90, y: 360 },
     goal: { x: 590, y: 200, height: 100 },
     platforms: [
       { x: 520, y: 300, width: 160, height: 20 }
@@ -43,7 +43,7 @@ export const stages: StageData[] = [
     holes: [
       { x: 270, width: 65 }
     ],
-    maxSelectionCount: 5,
+    maxSelectionCount: 4,
     animationChoices: ["jump", "double-jump", "stop", "move"],
     playerStart: { x: 80, y: 360 },
     goal: { x: 780, y: 150, height: 90 },
@@ -65,6 +65,46 @@ export const stages: StageData[] = [
         fallSpeed: 320
       }
     ],
+    animationIds: []
+  },
+  {
+    id: "1-2",
+    name: "1-2",
+    size: { width: 800, height: 450 },
+    groundY: 400,
+    holes: [],
+    maxSelectionCount: 5,
+    animationChoices: ["jump", "stop", "move", "reverse"],
+    playerStart: { x: 140, y: 360 },
+    goal: { x: 170, y: 125, height: 90 },
+    platforms: [
+      { x: 110, y: 215, width: 160, height: 20 },
+      { x: 290, y: 300, width: 145, height: 20 }
+    ],
+    obstacles: [],
+    animationIds: []
+  },
+  {
+    id: "1-3",
+    name: "1-3",
+    size: { width: 800, height: 450 },
+    groundY: 400,
+    holes: [
+      { x: 430, width: 60 },
+    ],
+    maxSelectionCount: 5,
+    animationChoices: ["jump", "double-jump", "reverse", "crouch"],
+    playerStart: { x: 80, y: 360 },
+    goal: { x: 520, y: 320, height: 80 },
+    platforms: [
+      { x: 200, y: 320, width: 220, height: 20 },
+      { x: 260, y: 200, width: 20, height: 100 },
+      { x: 280, y: 280, width: 60, height: 20 },
+      { x: 440, y: 240, width: 260, height: 20 },
+      { x: 520, y: 200, width: 180, height: 20 },
+      { x: 640, y: 160, width: 160, height: 20 }
+    ],
+    obstacles: [],
     animationIds: []
   }
 ];
