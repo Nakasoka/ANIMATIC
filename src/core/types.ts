@@ -10,7 +10,7 @@ export interface StageData {
   animationChoices: string[];
   playerStart: { x: number; y: number };
   goal: GoalLine;
-  platforms: Rect[];
+  platforms: PlatformDefinition[];
   obstacles: FallingSpikeDefinition[];
   animationIds: string[];
 }
@@ -20,6 +20,12 @@ export interface Rect {
   y: number;
   width: number;
   height: number;
+}
+
+export interface PlatformDefinition extends Rect {
+  id?: string;
+  vanishOnStandMs?: number;
+  color?: string;
 }
 
 export interface GoalLine {
@@ -63,7 +69,7 @@ export interface VisualTrack {
 }
 
 export interface EffectTrack {
-  property: "x" | "y" | "vx" | "vy" | "dir" | "height";
+  property: "x" | "y" | "vx" | "vy" | "dir" | "height" | "gravityScale" | "dashShape";
   keyframes: Array<Keyframe<number>>;
 }
 
@@ -77,4 +83,6 @@ export interface EffectState {
   velocityOverride?: { x?: number; y?: number };
   directionFlip?: number;
   heightOverride?: number;
+  gravityScale?: number;
+  dashShape?: number;
 }

@@ -67,6 +67,10 @@ export class AnimationSystem {
               effects.directionFlip = value;
             } else if (track.property === "height") {
               effects.heightOverride = value;
+            } else if (track.property === "gravityScale") {
+              effects.gravityScale = value;
+            } else if (track.property === "dashShape") {
+              effects.dashShape = value;
             } else {
               if (!effects.velocityOverride) effects.velocityOverride = {};
               const axis = track.property === "vx" ? "x" : "y";

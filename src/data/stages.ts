@@ -1,4 +1,4 @@
-import { StageData } from "../core/types.js";
+﻿import { StageData } from "../core/types.js";
 
 export const stages: StageData[] = [
   {
@@ -90,12 +90,12 @@ export const stages: StageData[] = [
     size: { width: 800, height: 450 },
     groundY: 400,
     holes: [
-      { x: 430, width: 60 },
+      { x: 430, width: 80 }
     ],
     maxSelectionCount: 5,
     animationChoices: ["jump", "double-jump", "reverse", "crouch"],
     playerStart: { x: 80, y: 360 },
-    goal: { x: 520, y: 320, height: 80 },
+    goal: { x: 540, y: 320, height: 80 },
     platforms: [
       { x: 200, y: 320, width: 220, height: 20 },
       { x: 260, y: 200, width: 20, height: 100 },
@@ -103,6 +103,48 @@ export const stages: StageData[] = [
       { x: 440, y: 240, width: 260, height: 20 },
       { x: 520, y: 200, width: 180, height: 20 },
       { x: 640, y: 160, width: 160, height: 20 }
+    ],
+    obstacles: [],
+    animationIds: []
+  },
+  {
+    id: "1-4",
+    name: "1-4",
+    size: { width: 800, height: 450 },
+    groundY: 400,
+    holes: [
+      { x: 0, width: 800 }
+    ],
+    maxSelectionCount: 5,
+    animationChoices: ["double-jump", "reverse", "move", "dash"],
+    playerStart: { x: 40, y: 260 },
+    goal: { x: 60, y: 140, height: 80 },
+    platforms: [
+      { x: 0, y: 120, width: 360, height: 20 },
+      { x: 360, y: 0, width: 20, height: 140 },
+      { x: 0, y: 220, width: 140, height: 20 },
+      {
+        id: "1-4-yellow-1",
+        x: 140,
+        y: 220,
+        width: 120,
+        height: 20,
+        vanishOnStandMs: 500,
+        color: "#d6a33b"
+      },
+      { x: 260, y: 220, width: 100, height: 20 },
+      { x: 460, y: 220, width: 180, height: 20 },
+      { x: 0, y: 300, width: 180, height: 20 },
+      {
+        id: "1-4-yellow-2",
+        x: 180,
+        y: 300,
+        width: 120,
+        height: 20,
+        vanishOnStandMs: 500,
+        color: "#d6a33b"
+      },
+      { x: 300, y: 300, width: 160, height: 20 }
     ],
     obstacles: [],
     animationIds: []

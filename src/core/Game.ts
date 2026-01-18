@@ -10,6 +10,7 @@ import { Player } from "../entities/Player.js";
 import { AnimationSystem } from "../systems/AnimationSystem.js";
 import { PhysicsSystem } from "../systems/PhysicsSystem.js";
 import { ObstacleSystem } from "../systems/ObstacleSystem.js";
+import { PlatformSystem } from "../systems/PlatformSystem.js";
 import { StageData, VisualState } from "./types.js";
 import { UiController } from "../ui/UiController.js";
 
@@ -30,6 +31,7 @@ export class Game {
   private animationSystem: AnimationSystem;
   private physicsSystem: PhysicsSystem;
   private obstacleSystem: ObstacleSystem;
+  private platformSystem: PlatformSystem;
   private renderer: Renderer;
   private timeMs = 0;
   private visuals: VisualState = { color: "#f5f5f5", scale: 1 };
@@ -50,6 +52,7 @@ export class Game {
     this.animationSystem = new AnimationSystem(animations);
     this.physicsSystem = new PhysicsSystem();
     this.obstacleSystem = new ObstacleSystem(this.stage);
+    this.platformSystem = new PlatformSystem(this.stage);
     this.renderer = new Renderer(canvas, this.stage);
     this.loop = new Loop(this.update, this.render);
     this.ui = ui;
@@ -91,6 +94,7 @@ export class Game {
       scale: 1,
       ...visuals
     };
+    this.player.dashShape = Boolean(effects.dashShape);
     if (!effects.velocityOverride) effects.velocityOverride = {};
     const reverseTriggered = effects.directionFlip !== undefined;
     if (reverseTriggered && this.timeMs - this.lastReverseMs > 50) {
@@ -110,13 +114,21 @@ export class Game {
     if (effects.velocityOverride.x === undefined) {
       effects.velocityOverride.x = this.baseMoveSpeed * this.moveDirection;
     }
-    const crushed = this.physicsSystem.update(dt, this.player, effects, this.stage);
+    const activePlatforms = this.platformSystem.getActivePlatforms();
+    const crushed = this.physicsSystem.update(
+      dt,
+      this.player,
+      effects,
+      this.stage,
+      activePlatforms
+    );
     if (crushed) {
       this.state = "crush_pending";
       this.crushElapsedMs = 0;
       this.player.deadEyes = true;
       return;
     }
+    this.platformSystem.update(dt, this.player);
     const hitGoal =
       this.player.x <= this.stage.goal.x &&
       this.player.x + this.player.width >= this.stage.goal.x &&
@@ -156,7 +168,8 @@ export class Game {
       this.player,
       this.visuals,
       this.timeMs,
-      this.obstacleSystem.getObstacles()
+      this.obstacleSystem.getObstacles(),
+      this.platformSystem.getActivePlatforms()
     );
   };
 
@@ -230,6 +243,7 @@ export class Game {
     this.stage = nextStage;
     this.applySelectionOptions(this.stage);
     this.renderer = new Renderer(this.canvas, this.stage);
+    this.platformSystem = new PlatformSystem(this.stage);
     this.reset();
   }
 
@@ -249,6 +263,7 @@ export class Game {
     this.crushElapsedMs = 0;
     this.player.reset(this.stage.playerStart.x, this.stage.playerStart.y);
     this.obstacleSystem.reset(this.stage);
+    this.platformSystem.reset(this.stage);
   }
 
   private applySelectionOptions(stage: StageData) {

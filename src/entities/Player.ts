@@ -8,6 +8,7 @@ export class Player {
   height = 40;
   baseColor = "#f5f5f5";
   deadEyes = false;
+  dashShape = false;
 
   constructor(startX: number, startY: number) {
     this.x = startX;
@@ -21,5 +22,6 @@ export class Player {
     this.vy = 0;
     this.height = this.baseHeight;
     this.deadEyes = false;
+    this.dashShape = false;
   }
 }

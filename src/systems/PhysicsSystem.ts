@@ -1,4 +1,4 @@
-import { EffectState, StageData } from "../core/types.js";
+import { EffectState, PlatformDefinition, StageData } from "../core/types.js";
 import { GRAVITY } from "../core/constants.js";
 import { Player } from "../entities/Player.js";
 
@@ -7,7 +7,8 @@ export class PhysicsSystem {
     dt: number,
     player: Player,
     effects: EffectState,
-    stage: StageData
+    stage: StageData,
+    platforms?: PlatformDefinition[]
   ): boolean {
     const desiredHeight =
       effects.heightOverride !== undefined
@@ -15,7 +16,7 @@ export class PhysicsSystem {
         : player.baseHeight;
     let crushed = false;
     if (desiredHeight > player.height) {
-      const gap = this.getVerticalGap(player, stage);
+      const gap = this.getVerticalGap(player, stage, platforms ?? stage.platforms);
       if (gap < 21 || gap < desiredHeight) {
         crushed = true;
       }
@@ -40,11 +41,13 @@ export class PhysicsSystem {
       player.vy = effects.velocityOverride.y;
     }
 
-    player.vy += GRAVITY * dt;
+    const gravityScale = effects.gravityScale ?? 1;
+    player.vy += GRAVITY * gravityScale * dt;
     player.x += player.vx * dt;
     player.y += player.vy * dt;
 
-    this.resolvePlatforms(previousX, previousY, player, stage);
+    const activePlatforms = platforms ?? stage.platforms;
+    this.resolvePlatforms(previousX, previousY, player, activePlatforms);
     this.resolveGround(previousY, player, stage);
     return crushed;
   }
@@ -53,7 +56,7 @@ export class PhysicsSystem {
     previousX: number,
     previousY: number,
     player: Player,
-    stage: StageData
+    platforms: PlatformDefinition[]
   ) {
     const playerLeft = player.x;
     const playerRight = player.x + player.width;
@@ -64,7 +67,7 @@ export class PhysicsSystem {
     const previousTop = previousY;
     const previousBottom = previousY + player.height;
 
-    for (const platform of stage.platforms) {
+    for (const platform of platforms) {
       const intersects =
         playerRight > platform.x &&
         playerLeft < platform.x + platform.width &&
@@ -114,7 +117,7 @@ export class PhysicsSystem {
     }
   }
 
-  private getVerticalGap(player: Player, stage: StageData) {
+  private getVerticalGap(player: Player, stage: StageData, platforms: PlatformDefinition[]) {
     const playerLeft = player.x;
     const playerRight = player.x + player.width;
     const playerTop = player.y;
@@ -122,7 +125,7 @@ export class PhysicsSystem {
     let floorY = stage.groundY;
     let ceilingY = 0;
 
-    for (const platform of stage.platforms) {
+    for (const platform of platforms) {
       const overlapsX =
         playerRight > platform.x && playerLeft < platform.x + platform.width;
       if (!overlapsX) continue;

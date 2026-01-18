@@ -1,4 +1,4 @@
-import { ObstacleState, StageData, VisualState } from "./types.js";
+import { ObstacleState, PlatformDefinition, StageData, VisualState } from "./types.js";
 import { Player } from "../entities/Player.js";
 
 export class Renderer {
@@ -20,12 +20,13 @@ export class Renderer {
     player: Player,
     visuals: VisualState,
     timeMs: number,
-    obstacles: ObstacleState[]
+    obstacles: ObstacleState[],
+    platforms?: PlatformDefinition[]
   ) {
     const { ctx } = this;
     ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-    this.renderStageBase(ctx, obstacles);
+    this.renderStageBase(ctx, obstacles, platforms ?? this.stage.platforms);
     this.renderPlayer(ctx, player, visuals);
 
     ctx.fillStyle = "#e6e6e6";
@@ -43,7 +44,7 @@ export class Renderer {
         state: "idle"
       })
     );
-    this.renderStageBase(ctx, previewObstacles);
+    this.renderStageBase(ctx, previewObstacles, this.stage.platforms);
     const previewPlayer = new Player(
       this.stage.playerStart.x,
       this.stage.playerStart.y
@@ -54,7 +55,11 @@ export class Renderer {
     });
   }
 
-  private renderStageBase(ctx: CanvasRenderingContext2D, obstacles: ObstacleState[]) {
+  private renderStageBase(
+    ctx: CanvasRenderingContext2D,
+    obstacles: ObstacleState[],
+    platforms: PlatformDefinition[]
+  ) {
     ctx.fillStyle = "#0f0f14";
     ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
@@ -70,8 +75,11 @@ export class Renderer {
       ctx.fillRect(hole.x, this.stage.groundY, hole.width, 50);
     }
 
-    ctx.fillStyle = "#1a1a22";
-    for (const platform of this.stage.platforms) {
+    for (const platform of platforms) {
+      const platformColor =
+        platform.color ??
+        (platform.vanishOnStandMs ? "#d6a33b" : "#1a1a22");
+      ctx.fillStyle = platformColor;
       ctx.fillRect(platform.x, platform.y, platform.width, platform.height);
     }
 
@@ -108,7 +116,26 @@ export class Renderer {
 
     ctx.strokeStyle = outlineColor;
     ctx.lineWidth = 2;
-    ctx.strokeRect(drawX, drawY, drawWidth, drawHeight);
+    const dashDir = player.vx < 0 ? -1 : 1;
+    if (player.dashShape) {
+      const skewX = Math.min(drawWidth * 0.5, drawHeight * 0.8) * dashDir;
+      ctx.beginPath();
+      if (skewX > 0) {
+        ctx.moveTo(drawX + skewX, drawY);
+        ctx.lineTo(drawX + drawWidth + skewX, drawY);
+        ctx.lineTo(drawX + drawWidth, drawY + drawHeight);
+        ctx.lineTo(drawX, drawY + drawHeight);
+      } else {
+        ctx.moveTo(drawX, drawY);
+        ctx.lineTo(drawX + drawWidth, drawY);
+        ctx.lineTo(drawX + drawWidth - skewX, drawY + drawHeight);
+        ctx.lineTo(drawX - skewX, drawY + drawHeight);
+      }
+      ctx.closePath();
+      ctx.stroke();
+    } else {
+      ctx.strokeRect(drawX, drawY, drawWidth, drawHeight);
+    }
 
     ctx.fillStyle = outlineColor;
     const gaze = Math.max(-1, Math.min(1, player.vx / 120));
@@ -116,10 +143,16 @@ export class Renderer {
     const eyeRadiusY = Math.max(2, player.baseHeight * 0.08);
     const eyeY = drawY + drawHeight * 0.38;
     const eyeBaseOffsetX = drawWidth * 0.26;
-    const eyeShift = gaze * drawWidth * 0.06;
+    const eyeShift =
+      gaze * drawWidth * 0.06 + (player.dashShape && dashDir < 0 ? 15 : 0);
+    const skewX = player.dashShape
+      ? Math.min(drawWidth * 0.5, drawHeight * 0.8) * dashDir
+      : 0;
+    const skewAtEye =
+      skewX !== 0 ? ((drawHeight - (eyeY - drawY)) / drawHeight) * skewX : 0;
     if (player.deadEyes) {
-      const leftX = drawX + eyeBaseOffsetX + eyeShift;
-      const rightX = drawX + drawWidth - eyeBaseOffsetX + eyeShift;
+      const leftX = drawX + eyeBaseOffsetX + eyeShift + skewAtEye;
+      const rightX = drawX + drawWidth - eyeBaseOffsetX + eyeShift + skewAtEye;
       const size = Math.max(4, eyeRadiusY * 1.2);
       ctx.lineWidth = 2;
       ctx.beginPath();
@@ -132,10 +165,21 @@ export class Renderer {
       ctx.moveTo(rightX - size, eyeY + size);
       ctx.lineTo(rightX + size, eyeY - size);
       ctx.stroke();
+    } else if (player.dashShape) {
+      const leftX = drawX + eyeBaseOffsetX + eyeShift + skewAtEye;
+      const rightX = drawX + drawWidth - eyeBaseOffsetX + eyeShift + skewAtEye;
+      const slant = eyeRadiusY * 0.9;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(leftX - eyeRadiusX, eyeY - slant);
+      ctx.lineTo(leftX + eyeRadiusX, eyeY + slant);
+      ctx.moveTo(rightX - eyeRadiusX, eyeY + slant);
+      ctx.lineTo(rightX + eyeRadiusX, eyeY - slant);
+      ctx.stroke();
     } else {
       ctx.beginPath();
       ctx.ellipse(
-        drawX + eyeBaseOffsetX + eyeShift,
+        drawX + eyeBaseOffsetX + eyeShift + skewAtEye,
         eyeY,
         eyeRadiusX,
         eyeRadiusY,
@@ -144,7 +188,7 @@ export class Renderer {
         Math.PI * 2
       );
       ctx.ellipse(
-        drawX + drawWidth - eyeBaseOffsetX + eyeShift,
+        drawX + drawWidth - eyeBaseOffsetX + eyeShift + skewAtEye,
         eyeY,
         eyeRadiusX,
         eyeRadiusY,

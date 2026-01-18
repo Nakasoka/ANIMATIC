@@ -411,6 +411,7 @@ class PreviewRunner {
     if (actionTimeMs >= 0 && actionTimeMs <= actionEndMs) {
       effects = this.animationSystem.sample(actionTimeMs).effects;
     }
+    this.player.dashShape = Boolean(effects.dashShape);
     if (!effects.velocityOverride) effects.velocityOverride = {};
     const reverseTriggered = effects.directionFlip !== undefined;
     if (reverseTriggered && this.elapsedMs - this.lastReverseMs > 50) {
@@ -430,7 +431,13 @@ class PreviewRunner {
     if (effects.velocityOverride.x === undefined) {
       effects.velocityOverride.x = this.baseMoveSpeed * this.moveDirection;
     }
-    const crushed = this.physicsSystem.update(dt, this.player, effects, this.stage);
+    const crushed = this.physicsSystem.update(
+      dt,
+      this.player,
+      effects,
+      this.stage,
+      this.stage.platforms
+    );
     if (crushed) {
       this.reset();
       this.draw();
@@ -471,12 +478,77 @@ class PreviewRunner {
     ctx.stroke();
 
     ctx.strokeStyle = "#f5f5f5";
-    ctx.strokeRect(
-      this.player.x,
-      this.player.y,
-      this.player.width,
-      this.player.height
-    );
+    ctx.lineWidth = 2;
+    const drawX = this.player.x;
+    const drawY = this.player.y;
+    const drawWidth = this.player.width;
+    const drawHeight = this.player.height;
+    const dashDir = this.player.vx < 0 ? -1 : 1;
+    const skewX = this.player.dashShape
+      ? Math.min(drawWidth * 0.5, drawHeight * 0.8) * dashDir
+      : 0;
+    if (this.player.dashShape) {
+      ctx.beginPath();
+      if (skewX > 0) {
+        ctx.moveTo(drawX + skewX, drawY);
+        ctx.lineTo(drawX + drawWidth + skewX, drawY);
+        ctx.lineTo(drawX + drawWidth, drawY + drawHeight);
+        ctx.lineTo(drawX, drawY + drawHeight);
+      } else {
+        ctx.moveTo(drawX, drawY);
+        ctx.lineTo(drawX + drawWidth, drawY);
+        ctx.lineTo(drawX + drawWidth - skewX, drawY + drawHeight);
+        ctx.lineTo(drawX - skewX, drawY + drawHeight);
+      }
+      ctx.closePath();
+      ctx.stroke();
+    } else {
+      ctx.strokeRect(drawX, drawY, drawWidth, drawHeight);
+    }
+
+    ctx.fillStyle = "#f5f5f5";
+    const eyeRadiusX = Math.max(2, drawWidth * 0.05);
+    const eyeRadiusY = Math.max(2, this.player.baseHeight * 0.08);
+    const eyeY = drawY + drawHeight * 0.38;
+    const eyeBaseOffsetX = drawWidth * 0.26;
+    const gaze = Math.max(-1, Math.min(1, this.player.vx / 120));
+    const eyeShift =
+      gaze * drawWidth * 0.06 + (this.player.dashShape && dashDir < 0 ? 15 : 0);
+    const skewAtEye =
+      skewX !== 0 ? ((drawHeight - (eyeY - drawY)) / drawHeight) * skewX : 0;
+    if (this.player.dashShape) {
+      const leftX = drawX + eyeBaseOffsetX + eyeShift + skewAtEye;
+      const rightX = drawX + drawWidth - eyeBaseOffsetX + eyeShift + skewAtEye;
+      const slant = eyeRadiusY * 0.9;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(leftX - eyeRadiusX, eyeY - slant);
+      ctx.lineTo(leftX + eyeRadiusX, eyeY + slant);
+      ctx.moveTo(rightX - eyeRadiusX, eyeY + slant);
+      ctx.lineTo(rightX + eyeRadiusX, eyeY - slant);
+      ctx.stroke();
+    } else {
+      ctx.beginPath();
+      ctx.ellipse(
+        drawX + eyeBaseOffsetX + eyeShift + skewAtEye,
+        eyeY,
+        eyeRadiusX,
+        eyeRadiusY,
+        0,
+        0,
+        Math.PI * 2
+      );
+      ctx.ellipse(
+        drawX + drawWidth - eyeBaseOffsetX + eyeShift + skewAtEye,
+        eyeY,
+        eyeRadiusX,
+        eyeRadiusY,
+        0,
+        0,
+        Math.PI * 2
+      );
+      ctx.fill();
+    }
     ctx.restore();
   }
 
@@ -505,6 +577,7 @@ class PreviewRunner {
     };
   }
 }
+
 
 
 

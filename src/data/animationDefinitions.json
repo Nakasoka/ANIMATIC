@@ -54,6 +54,16 @@
     "name": "しゃがむ",
     "action": "キャラの高さを20pxにする。所要時間が経過すると元に戻る",
     "effect": { "type": "crouch" },
+    "durationSec": 1.5,
+    "intervalSec": 0,
+    "startDelaySec": 0.5,
+    "priority": 5
+  },
+  {
+    "id": "dash",
+    "name": "ダッシュ",
+    "action": "所要時間の間、進む速度が2倍になり、重力の効果を受けなくなる",
+    "effect": { "type": "dash", "speed": 220 },
     "durationSec": 1,
     "intervalSec": 0,
     "startDelaySec": 0.5,

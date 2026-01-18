@@ -9,6 +9,7 @@ export type AnimationEffect =
   | { type: "move-right"; speed: number }
   | { type: "reverse"; speed: number; downSpeed: number }
   | { type: "crouch" }
+  | { type: "dash"; speed: number }
   | { type: "grow-shrink" };
 
 export interface AnimationDefinition {
@@ -44,6 +45,7 @@ const DOUBLE_JUMP_SECOND_START_MAX = 0.55;
 const DOUBLE_JUMP_SECOND_START_STEP = 0.04;
 const DOUBLE_JUMP_APEX_RATIO = 0.7;
 const DOUBLE_JUMP_SECOND_HEIGHT_RATIO = 0.6;
+const DASH_HEIGHT = 35;
 
 export const buildAnimationClips = (
   definitionIds: string[],
@@ -156,6 +158,52 @@ const addEffectClips = (
             keyframes: [
               { time: 0, value: 18 },
               { time: 1, value: 18 }
+            ]
+          }
+        ]
+      });
+      return;
+    case "dash":
+      clips.push({
+        id: `${definition.id}-${startMs}`,
+        target: "player",
+        startMs,
+        durationMs: actionDurationMs,
+        priority: definition.priority,
+        effects: [
+          {
+            property: "vx",
+            keyframes: [
+              { time: 0, value: definition.effect.speed },
+              { time: 1, value: definition.effect.speed }
+            ]
+          },
+          {
+            property: "vy",
+            keyframes: [
+              { time: 0, value: 0 },
+              { time: 1, value: 0 }
+            ]
+          },
+          {
+            property: "gravityScale",
+            keyframes: [
+              { time: 0, value: 0 },
+              { time: 1, value: 0 }
+            ]
+          },
+          {
+            property: "height",
+            keyframes: [
+              { time: 0, value: DASH_HEIGHT },
+              { time: 1, value: DASH_HEIGHT }
+            ]
+          },
+          {
+            property: "dashShape",
+            keyframes: [
+              { time: 0, value: 1 },
+              { time: 1, value: 1 }
             ]
           }
         ]
