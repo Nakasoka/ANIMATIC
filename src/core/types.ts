@@ -86,3 +86,9 @@ export interface EffectState {
   gravityScale?: number;
   dashShape?: number;
 }
+
+export interface CameraState {
+  x: number;
+  y: number;
+  scale: number;
+}

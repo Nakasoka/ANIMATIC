@@ -11,7 +11,7 @@ import { AnimationSystem } from "../systems/AnimationSystem.js";
 import { PhysicsSystem } from "../systems/PhysicsSystem.js";
 import { ObstacleSystem } from "../systems/ObstacleSystem.js";
 import { PlatformSystem } from "../systems/PlatformSystem.js";
-import { StageData, VisualState } from "./types.js";
+import { CameraState, StageData, VisualState } from "./types.js";
 import { UiController } from "../ui/UiController.js";
 
 type GameState =
@@ -43,6 +43,11 @@ export class Game {
   private crushElapsedMs = 0;
   private selectedStageId = "tutorial";
   private clearedStages = new Set<string>();
+  private camera: CameraState = { x: 0, y: 0, scale: 1 };
+  private isDragging = false;
+  private lastDrag = { x: 0, y: 0 };
+  private minZoom = 1;
+  private maxZoom = 1.2;
 
   constructor(canvas: HTMLCanvasElement, ui: UiController) {
     this.canvas = canvas;
@@ -71,6 +76,11 @@ export class Game {
     this.ui.onBackToStageSelect = this.backToStageSelect;
     this.ui.setStageProgress(this.clearedStages);
     this.ui.showStageSelect();
+
+    this.canvas.addEventListener("mousedown", this.handleDragStart);
+    window.addEventListener("mousemove", this.handleDragMove);
+    window.addEventListener("mouseup", this.handleDragEnd);
+    this.canvas.addEventListener("wheel", this.handleWheel, { passive: false });
   }
 
   start() {
@@ -169,7 +179,8 @@ export class Game {
       this.visuals,
       this.timeMs,
       this.obstacleSystem.getObstacles(),
-      this.platformSystem.getActivePlatforms()
+      this.platformSystem.getActivePlatforms(),
+      this.camera
     );
   };
 
@@ -215,13 +226,15 @@ export class Game {
     if (this.state !== "selecting") return;
     this.state = "paused";
     this.ui.showStagePreview();
-    this.ui.renderStagePreview((ctx) => this.renderer.renderStagePreview(ctx));
+    this.ui.renderStagePreview((ctx, camera) =>
+      this.renderer.renderStagePreview(ctx, camera)
+    );
   };
 
   private backToSelection = () => {
     if (this.state !== "paused") return;
     this.state = "selecting";
-    this.ui.showSelection();
+    this.ui.showSelection(true);
   };
 
   private backToStageSelect = () => {
@@ -264,6 +277,7 @@ export class Game {
     this.player.reset(this.stage.playerStart.x, this.stage.playerStart.y);
     this.obstacleSystem.reset(this.stage);
     this.platformSystem.reset(this.stage);
+    this.resetCamera();
   }
 
   private applySelectionOptions(stage: StageData) {
@@ -273,5 +287,64 @@ export class Game {
         : animationDefinitions;
     this.ui.setAnimationOptions(options);
     this.ui.setMaxSelectionCount(stage.maxSelectionCount);
+    this.ui.setStagePreviewStage(stage);
   }
+
+  private resetCamera() {
+    const viewWidth = this.canvas.width / this.camera.scale;
+    const viewHeight = this.canvas.height / this.camera.scale;
+    const targetX = this.player.x + this.player.width / 2 - viewWidth / 2;
+    const targetY = this.player.y + this.player.height / 2 - viewHeight / 2;
+    this.camera.x = targetX;
+    this.camera.y = targetY;
+    this.clampCamera();
+  }
+
+  private clampCamera() {
+    const viewWidth = this.canvas.width / this.camera.scale;
+    const viewHeight = this.canvas.height / this.camera.scale;
+    const maxX = Math.max(0, this.stage.size.width - viewWidth);
+    const maxY = Math.max(0, this.stage.size.height - viewHeight);
+    this.camera.x = Math.max(0, Math.min(this.camera.x, maxX));
+    this.camera.y = Math.max(0, Math.min(this.camera.y, maxY));
+  }
+
+  private handleDragStart = (event: MouseEvent) => {
+    if (this.state !== "playing" && this.state !== "paused") return;
+    this.isDragging = true;
+    this.lastDrag = { x: event.clientX, y: event.clientY };
+  };
+
+  private handleDragMove = (event: MouseEvent) => {
+    if (!this.isDragging) return;
+    if (this.state !== "playing" && this.state !== "paused") return;
+    const dx = (event.clientX - this.lastDrag.x) / this.camera.scale;
+    const dy = (event.clientY - this.lastDrag.y) / this.camera.scale;
+    this.camera.x -= dx;
+    this.camera.y -= dy;
+    this.lastDrag = { x: event.clientX, y: event.clientY };
+    this.clampCamera();
+  };
+
+  private handleDragEnd = () => {
+    this.isDragging = false;
+  };
+
+  private handleWheel = (event: WheelEvent) => {
+    if (this.state !== "playing" && this.state !== "paused") return;
+    event.preventDefault();
+    const rect = this.canvas.getBoundingClientRect();
+    const mouseX = event.clientX - rect.left;
+    const mouseY = event.clientY - rect.top;
+    const worldX = mouseX / this.camera.scale + this.camera.x;
+    const worldY = mouseY / this.camera.scale + this.camera.y;
+    const zoomFactor = Math.exp(-event.deltaY * 0.001);
+    this.camera.scale = Math.min(
+      this.maxZoom,
+      Math.max(this.minZoom, this.camera.scale * zoomFactor)
+    );
+    this.camera.x = worldX - mouseX / this.camera.scale;
+    this.camera.y = worldY - mouseY / this.camera.scale;
+    this.clampCamera();
+  };
 }

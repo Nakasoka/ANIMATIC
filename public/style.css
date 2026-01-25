@@ -97,6 +97,7 @@ canvas {
   border-radius: 8px;
   background: rgba(0, 0, 0, 0.2);
   margin-bottom: 10px;
+  pointer-events: auto;
 }
 
 .ui-stage-card {

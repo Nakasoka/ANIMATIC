@@ -1,4 +1,10 @@
-import { ObstacleState, PlatformDefinition, StageData, VisualState } from "./types.js";
+import {
+  CameraState,
+  ObstacleState,
+  PlatformDefinition,
+  StageData,
+  VisualState
+} from "./types.js";
 import { Player } from "../entities/Player.js";
 
 export class Renderer {
@@ -12,8 +18,6 @@ export class Renderer {
     this.ctx = ctx;
     this.canvas = canvas;
     this.stage = stage;
-    this.canvas.width = stage.size.width;
-    this.canvas.height = stage.size.height;
   }
 
   render(
@@ -21,13 +25,14 @@ export class Renderer {
     visuals: VisualState,
     timeMs: number,
     obstacles: ObstacleState[],
-    platforms?: PlatformDefinition[]
+    platforms?: PlatformDefinition[],
+    camera: CameraState = { x: 0, y: 0, scale: 1 }
   ) {
     const { ctx } = this;
     ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-    this.renderStageBase(ctx, obstacles, platforms ?? this.stage.platforms);
-    this.renderPlayer(ctx, player, visuals);
+    this.renderStageBase(ctx, obstacles, platforms ?? this.stage.platforms, camera);
+    this.renderPlayer(ctx, player, visuals, camera);
 
     ctx.fillStyle = "#e6e6e6";
     ctx.font = "14px system-ui";
@@ -36,7 +41,7 @@ export class Renderer {
     ctx.fillText(`Time: ${(timeMs / 1000).toFixed(2)}s`, 20, 64);
   }
 
-  renderStagePreview(ctx: CanvasRenderingContext2D) {
+  renderStagePreview(ctx: CanvasRenderingContext2D, camera: CameraState) {
     ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     const previewObstacles: ObstacleState[] = this.stage.obstacles.map(
       (obstacle) => ({
@@ -44,7 +49,7 @@ export class Renderer {
         state: "idle"
       })
     );
-    this.renderStageBase(ctx, previewObstacles, this.stage.platforms);
+    this.renderStageBase(ctx, previewObstacles, this.stage.platforms, camera);
     const previewPlayer = new Player(
       this.stage.playerStart.x,
       this.stage.playerStart.y
@@ -52,22 +57,30 @@ export class Renderer {
     this.renderPlayer(ctx, previewPlayer, {
       color: previewPlayer.baseColor,
       scale: 1
-    });
+    }, camera);
   }
 
   private renderStageBase(
     ctx: CanvasRenderingContext2D,
     obstacles: ObstacleState[],
-    platforms: PlatformDefinition[]
+    platforms: PlatformDefinition[],
+    camera: CameraState
   ) {
+    ctx.save();
+    ctx.scale(camera.scale, camera.scale);
+    ctx.translate(-camera.x, -camera.y);
+
+    const viewWidth = ctx.canvas.width / camera.scale;
+    const viewHeight = ctx.canvas.height / camera.scale;
+
     ctx.fillStyle = "#0f0f14";
-    ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    ctx.fillRect(0, 0, viewWidth, viewHeight);
 
     ctx.strokeStyle = "#2a2a35";
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.moveTo(0, this.stage.groundY);
-    ctx.lineTo(this.canvas.width, this.stage.groundY);
+    ctx.lineTo(this.stage.size.width, this.stage.groundY);
     ctx.stroke();
 
     ctx.fillStyle = "#0b0b10";
@@ -100,13 +113,19 @@ export class Renderer {
       ctx.closePath();
       ctx.fill();
     }
+    ctx.restore();
   }
 
   private renderPlayer(
     ctx: CanvasRenderingContext2D,
     player: Player,
-    visuals: VisualState
+    visuals: VisualState,
+    camera: CameraState
   ) {
+    ctx.save();
+    ctx.scale(camera.scale, camera.scale);
+    ctx.translate(-camera.x, -camera.y);
+
     const scaleY = visuals.scale ?? 1;
     const drawWidth = player.width;
     const drawHeight = player.height * scaleY;
@@ -198,5 +217,6 @@ export class Renderer {
       );
       ctx.fill();
     }
+    ctx.restore();
   }
 }

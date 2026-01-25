@@ -2,7 +2,7 @@
 import { AnimationSystem } from "../systems/AnimationSystem.js";
 import { PhysicsSystem } from "../systems/PhysicsSystem.js";
 import { Player } from "../entities/Player.js";
-import { EffectState, StageData } from "../core/types.js";
+import { CameraState, EffectState, StageData } from "../core/types.js";
 import { stageLinks, stageNodes } from "../data/stageMap.js";
 import { StageSelectView } from "./StageSelectView.js";
 
@@ -37,6 +37,12 @@ export class UiController {
   private stageSelectCanvas: HTMLCanvasElement;
   private stageSelectView: StageSelectView;
   private stageSelectZoomedOut = false;
+  private stagePreviewStage: StageData | null = null;
+  private stagePreviewCamera = { x: 0, y: 0, scale: 1 };
+  private stagePreviewDragging = false;
+  private stagePreviewLast = { x: 0, y: 0 };
+  private stagePreviewMinZoom = 1;
+  private stagePreviewMaxZoom = 1.2;
   private clearedStages = new Set<string>();
   private statusTitle: HTMLHeadingElement;
   private statusButtons: HTMLDivElement;
@@ -130,6 +136,53 @@ export class UiController {
       this.onBackToStageSelect?.()
     );
     this.stageSelectView.setOnSelect((id) => this.onStageSelected?.(id));
+
+    this.stagePreviewCanvas.addEventListener("pointerdown", (event) => {
+      if (!this.stagePreviewStage) return;
+      event.preventDefault();
+      this.stagePreviewDragging = true;
+      this.stagePreviewLast = { x: event.clientX, y: event.clientY };
+      this.stagePreviewCanvas.setPointerCapture(event.pointerId);
+    });
+    this.stagePreviewCanvas.addEventListener("pointermove", (event) => {
+      if (!this.stagePreviewDragging || !this.stagePreviewStage) return;
+      const dx = (event.clientX - this.stagePreviewLast.x) / this.stagePreviewCamera.scale;
+      const dy = (event.clientY - this.stagePreviewLast.y) / this.stagePreviewCamera.scale;
+      this.stagePreviewCamera.x -= dx;
+      this.stagePreviewCamera.y -= dy;
+      this.stagePreviewLast = { x: event.clientX, y: event.clientY };
+      this.clampStagePreviewCamera();
+      const ctx = this.stagePreviewCanvas.getContext("2d");
+      if (!ctx) return;
+      this.previewStageRenderer?.(ctx, this.stagePreviewCamera);
+    });
+    const endPreviewDrag = (event: PointerEvent) => {
+      if (!this.stagePreviewDragging) return;
+      this.stagePreviewDragging = false;
+      this.stagePreviewCanvas.releasePointerCapture(event.pointerId);
+    };
+    this.stagePreviewCanvas.addEventListener("pointerup", endPreviewDrag);
+    this.stagePreviewCanvas.addEventListener("pointercancel", endPreviewDrag);
+    this.stagePreviewCanvas.addEventListener("wheel", (event) => {
+      if (!this.stagePreviewStage) return;
+      event.preventDefault();
+      const rect = this.stagePreviewCanvas.getBoundingClientRect();
+      const mouseX = event.clientX - rect.left;
+      const mouseY = event.clientY - rect.top;
+      const worldX = mouseX / this.stagePreviewCamera.scale + this.stagePreviewCamera.x;
+      const worldY = mouseY / this.stagePreviewCamera.scale + this.stagePreviewCamera.y;
+      const zoomFactor = Math.exp(-event.deltaY * 0.001);
+      this.stagePreviewCamera.scale = Math.min(
+        this.stagePreviewMaxZoom,
+        Math.max(this.stagePreviewMinZoom, this.stagePreviewCamera.scale * zoomFactor)
+      );
+      this.stagePreviewCamera.x = worldX - mouseX / this.stagePreviewCamera.scale;
+      this.stagePreviewCamera.y = worldY - mouseY / this.stagePreviewCamera.scale;
+      this.clampStagePreviewCamera();
+      const ctx = this.stagePreviewCanvas.getContext("2d");
+      if (!ctx) return;
+      this.previewStageRenderer?.(ctx, this.stagePreviewCamera);
+    }, { passive: false });
   }
 
   setAnimationOptions(options: AnimationDefinition[]) {
@@ -259,6 +312,7 @@ export class UiController {
     this.pauseButton.classList.add("is-hidden");
     this.stageSelectModal.classList.add("is-hidden");
     this.stageModal.classList.remove("is-hidden");
+    this.resetStagePreviewCamera();
   }
 
   showStageSelect() {
@@ -275,10 +329,46 @@ export class UiController {
     this.stageSelectView.setClearedStages(this.clearedStages);
   }
 
-  renderStagePreview(renderer: (ctx: CanvasRenderingContext2D) => void) {
+  private previewStageRenderer: ((ctx: CanvasRenderingContext2D, camera: CameraState) => void) | null = null;
+
+  renderStagePreview(renderer: (ctx: CanvasRenderingContext2D, camera: CameraState) => void) {
     const ctx = this.stagePreviewCanvas.getContext("2d");
     if (!ctx) return;
-    renderer(ctx);
+    this.previewStageRenderer = renderer;
+    renderer(ctx, this.stagePreviewCamera);
+  }
+
+  setStagePreviewStage(stage: StageData) {
+    this.stagePreviewStage = stage;
+    this.resetStagePreviewCamera();
+  }
+
+  private resetStagePreviewCamera() {
+    if (!this.stagePreviewStage) return;
+    this.stagePreviewCamera.scale = 1;
+    const viewWidth = this.stagePreviewCanvas.width / this.stagePreviewCamera.scale;
+    const viewHeight = this.stagePreviewCanvas.height / this.stagePreviewCamera.scale;
+    const targetX =
+      this.stagePreviewStage.playerStart.x -
+      viewWidth / 2 +
+      40;
+    const targetY =
+      this.stagePreviewStage.playerStart.y -
+      viewHeight / 2 +
+      40;
+    this.stagePreviewCamera.x = targetX;
+    this.stagePreviewCamera.y = targetY;
+    this.clampStagePreviewCamera();
+  }
+
+  private clampStagePreviewCamera() {
+    if (!this.stagePreviewStage) return;
+    const viewWidth = this.stagePreviewCanvas.width / this.stagePreviewCamera.scale;
+    const viewHeight = this.stagePreviewCanvas.height / this.stagePreviewCamera.scale;
+    const maxX = Math.max(0, this.stagePreviewStage.size.width - viewWidth);
+    const maxY = Math.max(0, this.stagePreviewStage.size.height - viewHeight);
+    this.stagePreviewCamera.x = Math.max(0, Math.min(this.stagePreviewCamera.x, maxX));
+    this.stagePreviewCamera.y = Math.max(0, Math.min(this.stagePreviewCamera.y, maxY));
   }
 
 
