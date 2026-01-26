@@ -38,7 +38,6 @@ export class Renderer {
     ctx.font = "14px system-ui";
     ctx.fillText(`Stage: ${this.stage.name}`, 20, 24);
     ctx.fillText("Click Pause for menu", 20, 44);
-    ctx.fillText(`Time: ${(timeMs / 1000).toFixed(2)}s`, 20, 64);
   }
 
   renderStagePreview(ctx: CanvasRenderingContext2D, camera: CameraState) {
@@ -74,7 +73,7 @@ export class Renderer {
     const viewHeight = ctx.canvas.height / camera.scale;
 
     ctx.fillStyle = "#0f0f14";
-    ctx.fillRect(0, 0, viewWidth, viewHeight);
+    ctx.fillRect(camera.x, camera.y, viewWidth, viewHeight);
 
     ctx.strokeStyle = "#2a2a35";
     ctx.lineWidth = 2;
@@ -135,8 +134,9 @@ export class Renderer {
 
     ctx.strokeStyle = outlineColor;
     ctx.lineWidth = 2;
+    const isDashVisual = player.dashShape && Math.abs(player.vx) > 0.1;
     const dashDir = player.vx < 0 ? -1 : 1;
-    if (player.dashShape) {
+    if (isDashVisual) {
       const skewX = Math.min(drawWidth * 0.5, drawHeight * 0.8) * dashDir;
       ctx.beginPath();
       if (skewX > 0) {
@@ -163,8 +163,8 @@ export class Renderer {
     const eyeY = drawY + drawHeight * 0.38;
     const eyeBaseOffsetX = drawWidth * 0.26;
     const eyeShift =
-      gaze * drawWidth * 0.06 + (player.dashShape && dashDir < 0 ? 15 : 0);
-    const skewX = player.dashShape
+      gaze * drawWidth * 0.06 + (isDashVisual && dashDir < 0 ? 15 : 0);
+    const skewX = isDashVisual
       ? Math.min(drawWidth * 0.5, drawHeight * 0.8) * dashDir
       : 0;
     const skewAtEye =
@@ -184,7 +184,7 @@ export class Renderer {
       ctx.moveTo(rightX - size, eyeY + size);
       ctx.lineTo(rightX + size, eyeY - size);
       ctx.stroke();
-    } else if (player.dashShape) {
+    } else if (isDashVisual) {
       const leftX = drawX + eyeBaseOffsetX + eyeShift + skewAtEye;
       const rightX = drawX + drawWidth - eyeBaseOffsetX + eyeShift + skewAtEye;
       const slant = eyeRadiusY * 0.9;

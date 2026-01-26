@@ -168,69 +168,70 @@ export const stages: StageData[] = [
       "dash"
     ],
     playerStart: { x: 120, y: 840 },
-    goal: { x: 740, y: 160, height: 80 },
+    goal: { x: 780, y: 160, height: 80 },
     platforms: [
-      { x: 580, y: 840, width: 100, height: 20 },
+      { x: 600, y: 840, width: 100, height: 20 },
       { x: 0, y: 800, width: 160, height: 20 },
       { x: 280, y: 800, width: 180, height: 20 },
       { x: 640, y: 780, width: 180, height: 20 },
       { x: 0, y: 740, width: 80, height: 20 },
-      { x: 460, y: 700, width: 220, height: 20 },
-      { x: 540, y: 660, width: 80, height: 20 },
+      { x: 460, y: 700, width: 200, height: 20 },
+      { x: 560, y: 660, width: 60, height: 20 },
 
-      { x: 120, y: 640, width: 80, height: 20 },
+      { x: 80, y: 660, width: 60, height: 20 },
+      { x: 140, y: 640, width: 60, height: 20 },
       {
         id: "1-5-yellow-1",
         x: 200,
         y: 640,
-        width: 80,
+        width: 60,
         height: 20,
         vanishOnStandMs: 500,
         color: "#d6a33b"
       },
-      { x: 280, y: 640, width: 80, height: 20 },
+      { x: 260, y: 640, width: 80, height: 20 },
+      { x: 80, y: 620, width: 20, height: 40 },
 
-      { x: 540, y: 600, width: 20, height: 60 },
+      { x: 540, y: 600, width: 20, height: 80 },
 
-      { x: 200, y: 580, width: 80, height: 20 },
+      { x: 200, y: 580, width: 60, height: 20 },
 
       { x: 420, y: 540, width: 120, height: 20 },
       { x: 600, y: 540, width: 220, height: 20 },
 
-      { x: 260, y: 480, width: 20, height: 100 },
+      { x: 260, y: 480, width: 20, height: 120 },
       { x: 280, y: 480, width: 60, height: 20 },
 
-      { x: 600, y: 480, width: 80, height: 20 },
-      { x: 600, y: 400, width: 20, height: 80 },
+      { x: 620, y: 480, width: 60, height: 20 },
+      { x: 600, y: 400, width: 20, height: 100 },
       { x: 440, y: 400, width: 100, height: 20 },
 
-      { x: 0, y: 400, width: 80, height: 20 },
       {
         id: "1-5-yellow-2",
-        x: 80,
+        x: 0,
         y: 400,
         width: 80,
         height: 20,
         vanishOnStandMs: 500,
         color: "#d6a33b"
       },
-      { x: 160, y: 400, width: 80, height: 20 },
+      { x: 80, y: 400, width: 80, height: 20 },
 
       { x: 720, y: 360, width: 80, height: 20 },
 
-      { x: 240, y: 300, width: 400, height: 20 },
+      { x: 240, y: 300, width: 420, height: 20 },
 
-      { x: 300, y: 260, width: 80, height: 20 },
+      { x: 280, y: 260, width: 100, height: 20 },
       { x: 460, y: 260, width: 120, height: 20 },
 
       { x: 80, y: 240, width: 20, height: 100 },
       { x: 100, y: 240, width: 60, height: 20 },
 
-      { x: 680, y: 240, width: 120, height: 20 },
+      { x: 760, y: 240, width: 40, height: 20 },
 
-      { x: 500, y: 220, width: 80, height: 20 },
+      { x: 520, y: 220, width: 60, height: 20 },
 
-      { x: 500, y: 140, width: 20, height: 80 },
+      { x: 500, y: 140, width: 20, height: 100 },
       { x: 300, y: 140, width: 200, height: 20 }
     ],
     obstacles: [
@@ -241,17 +242,17 @@ export const stages: StageData[] = [
         y: 160,
         width: 30,
         height: 30,
-        trigger: { x: 320, y: 220, width: 80, height: 180 },
+        trigger: { x: 320, y: 220, width: 80, height: 80 },
         fallSpeed: 320
       },
       {
         id: "1-5-spike-mid",
         type: "falling_spike",
-        x: 700,
+        x: 760,
         y: 560,
         width: 30,
         height: 30,
-        trigger: { x: 680, y: 680, width: 80, height: 160 },
+        trigger: { x: 740, y: 680, width: 80, height: 160 },
         fallSpeed: 320
       },
       {

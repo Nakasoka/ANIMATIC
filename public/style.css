@@ -69,6 +69,7 @@ canvas {
 
 .ui-card {
   min-width: 540px;
+  width: min(960px, 100%);
   background: #15151d;
   border: 1px solid #2e2e3a;
   border-radius: 10px;
@@ -76,6 +77,11 @@ canvas {
   color: #e8e8e8;
   text-align: center;
   position: relative;
+}
+
+.ui-selection-card {
+  width: 528px;
+  max-width: 100%;
 }
 
 .ui-card h2 {
@@ -116,7 +122,7 @@ canvas {
 
 .ui-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(160px, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
   margin-bottom: 12px;
   max-height: 360px;
@@ -124,8 +130,14 @@ canvas {
   padding-right: 6px;
 }
 
+.ui-selection-card .ui-grid {
+  grid-template-columns: repeat(2, 240px);
+  justify-content: center;
+}
+
 #statusModal .ui-card {
-  min-width: 360px;
+  min-width: 260px;
+  width: fit-content;
 }
 
 .ui-list {
@@ -142,6 +154,13 @@ canvas {
   background: #101018;
   cursor: pointer;
   transition: border-color 0.2s ease;
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.ui-selection-card .ui-option-card {
+  width: 240px;
 }
 
 .ui-option-card:hover {
@@ -185,20 +204,36 @@ canvas {
 
 .ui-order {
   display: flex;
+  flex-wrap: wrap;
   gap: 6px;
   min-height: 18px;
+  max-width: 100%;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .ui-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   border-radius: 50%;
-  font-size: 11px;
+  font-size: 10px;
   background: #2c2c3a;
   color: #ffd166;
+}
+
+.ui-badge--small {
+  width: 14px;
+  height: 14px;
+  font-size: 9px;
+}
+
+.ui-order-break {
+  flex-basis: 100%;
+  height: 0;
 }
 
 .ui-footer {

@@ -395,11 +395,22 @@ export class UiController {
     for (const entry of this.cardMap.values()) {
       entry.orderRow.innerHTML = "";
     }
+    const perRowCount = new Map<string, number>();
     this.selectedIds.forEach((id, index) => {
       const entry = this.cardMap.get(id);
       if (!entry) return;
+      const current = (perRowCount.get(id) ?? 0) + 1;
+      perRowCount.set(id, current);
+      if (current === 11) {
+        const breakSpan = document.createElement("span");
+        breakSpan.className = "ui-order-break";
+        entry.orderRow.appendChild(breakSpan);
+      }
       const badge = document.createElement("span");
       badge.className = "ui-badge";
+      if (current >= 11) {
+        badge.classList.add("ui-badge--small");
+      }
       badge.textContent = String(index + 1);
       entry.orderRow.appendChild(badge);
     });
