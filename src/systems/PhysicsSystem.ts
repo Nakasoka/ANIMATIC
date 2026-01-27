@@ -10,6 +10,7 @@ export class PhysicsSystem {
     stage: StageData,
     platforms?: PlatformDefinition[]
   ): boolean {
+    // 高さ変更は「足元固定」で行い、挟まり判定を返す。
     const desiredHeight =
       effects.heightOverride !== undefined
         ? effects.heightOverride

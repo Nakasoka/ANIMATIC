@@ -24,6 +24,7 @@ export class AnimationSystem {
       previousTime = 0;
     }
 
+    // クリップは優先度で上書き。衝突時は高い方を採用。
     for (const clip of this.clips) {
       if (clip.durationMs <= 0) continue;
       const isImpulse = clip.durationMs <= 20;

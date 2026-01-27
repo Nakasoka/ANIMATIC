@@ -1,4 +1,5 @@
 export class Player {
+  // 位置はワールド座標（px）。
   x: number;
   y: number;
   vx = 0;

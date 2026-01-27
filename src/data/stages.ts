@@ -1,5 +1,7 @@
 ﻿import { StageData } from "../core/types.js";
 
+// すべてpx基準。groundYは地面の上端。
+
 export const stages: StageData[] = [
   {
     id: "tutorial",
@@ -27,12 +29,6 @@ export const stages: StageData[] = [
         trigger: { x: 310, y: 240, width: 50, height: 160 },
         fallSpeed: 320
       }
-    ],
-    animationIds: [
-      "tutorial-move",
-      "tutorial-hop",
-      "tutorial-color",
-      "tutorial-scale"
     ]
   },
   {
@@ -45,6 +41,7 @@ export const stages: StageData[] = [
     ],
     maxSelectionCount: 4,
     animationChoices: ["jump", "double-jump", "stop", "move"],
+    newAnimationIds: ["move"],
     playerStart: { x: 80, y: 360 },
     goal: { x: 780, y: 150, height: 90 },
     platforms: [
@@ -64,8 +61,7 @@ export const stages: StageData[] = [
         trigger: { x: 420, y: 180, width: 36, height: 160 },
         fallSpeed: 320
       }
-    ],
-    animationIds: []
+    ]
   },
   {
     id: "1-2",
@@ -75,6 +71,7 @@ export const stages: StageData[] = [
     holes: [],
     maxSelectionCount: 5,
     animationChoices: ["jump", "stop", "move", "reverse"],
+    newAnimationIds: ["reverse"],
     playerStart: { x: 140, y: 360 },
     goal: { x: 170, y: 125, height: 90 },
     platforms: [
@@ -82,7 +79,7 @@ export const stages: StageData[] = [
       { x: 290, y: 300, width: 145, height: 20 }
     ],
     obstacles: [],
-    animationIds: []
+
   },
   {
     id: "1-3",
@@ -90,22 +87,24 @@ export const stages: StageData[] = [
     size: { width: 800, height: 450 },
     groundY: 400,
     holes: [
-      { x: 430, width: 80 }
+      { x: 380, width: 80 }
     ],
     maxSelectionCount: 5,
     animationChoices: ["jump", "double-jump", "reverse", "crouch"],
-    playerStart: { x: 80, y: 360 },
-    goal: { x: 540, y: 320, height: 80 },
+    newAnimationIds: ["crouch"],
+    playerStart: { x: 40, y: 360 },
+    goal: { x: 500, y: 320, height: 80 },
     platforms: [
-      { x: 200, y: 320, width: 220, height: 20 },
-      { x: 260, y: 200, width: 20, height: 100 },
-      { x: 280, y: 280, width: 60, height: 20 },
-      { x: 440, y: 240, width: 260, height: 20 },
-      { x: 520, y: 200, width: 180, height: 20 },
-      { x: 640, y: 160, width: 160, height: 20 }
+      { x: 160, y: 320, width: 220, height: 20 },
+      { x: 360, y: 300, width: 20, height: 20 },
+      { x: 220, y: 200, width: 20, height: 100 },
+      { x: 240, y: 280, width: 60, height: 20 },
+      { x: 400, y: 240, width: 260, height: 20 },
+      { x: 480, y: 200, width: 180, height: 20 },
+      { x: 600, y: 160, width: 200, height: 20 }
     ],
     obstacles: [],
-    animationIds: []
+
   },
   {
     id: "1-4",
@@ -117,6 +116,7 @@ export const stages: StageData[] = [
     ],
     maxSelectionCount: 5,
     animationChoices: ["double-jump", "reverse", "move", "dash"],
+    newAnimationIds: ["dash"],
     playerStart: { x: 40, y: 260 },
     goal: { x: 60, y: 140, height: 80 },
     platforms: [
@@ -147,7 +147,7 @@ export const stages: StageData[] = [
       { x: 300, y: 300, width: 160, height: 20 }
     ],
     obstacles: [],
-    animationIds: []
+
   },
   {
     id: "1-5",
@@ -266,6 +266,6 @@ export const stages: StageData[] = [
         fallSpeed: 320
       }
     ],
-    animationIds: []
+
   }
 ];

@@ -2,70 +2,56 @@
   {
     "id": "jump",
     "name": "ジャンプ",
-    "action": "2秒に1回ジャンプする",
     "effect": { "type": "jump", "power": 1 },
     "durationSec": 1,
-    "intervalSec": 2,
     "startDelaySec": 0.5,
     "priority": 5
   },
   {
     "id": "double-jump",
     "name": "2段ジャンプ",
-    "action": "5秒に1回2段ジャンプする",
     "effect": { "type": "double-jump", "power": 1 },
     "durationSec": 1.7,
-    "intervalSec": 5,
     "startDelaySec": 0.5,
     "priority": 5
   },
   {
     "id": "stop",
     "name": "ストップ",
-    "action": "4秒に1回、2秒間その場で止まる",
     "effect": { "type": "stop" },
     "durationSec": 2,
-    "intervalSec": 4,
     "startDelaySec": 0.5,
     "priority": 5
   },
   {
     "id": "move",
     "name": "進む",
-    "action": "行動開始時に進んでいる方向に2秒間進む",
     "effect": { "type": "move-right", "speed": 140 },
     "durationSec": 1,
-    "intervalSec": 0,
     "startDelaySec": 0.5,
     "priority": 5
   },
   {
     "id": "reverse",
     "name": "反転",
-    "action": "進行方向を反転させる",
     "effect": { "type": "reverse", "speed": 110, "downSpeed": 300 },
     "durationSec": 0.5,
-    "intervalSec": 0,
     "startDelaySec": 0.5,
     "priority": 5
   },
   {
     "id": "crouch",
     "name": "しゃがむ",
-    "action": "キャラの高さを20pxにする。所要時間が経過すると元に戻る",
     "effect": { "type": "crouch" },
     "durationSec": 1.5,
-    "intervalSec": 0,
     "startDelaySec": 0.5,
     "priority": 5
   },
   {
     "id": "dash",
     "name": "ダッシュ",
-    "action": "所要時間の間、進む速度が2倍になり、重力の効果を受けなくなる",
     "effect": { "type": "dash", "speed": 220 },
     "durationSec": 1,
-    "intervalSec": 0,
     "startDelaySec": 0.5,
     "priority": 5
   }

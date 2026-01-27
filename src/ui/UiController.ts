@@ -185,15 +185,23 @@ export class UiController {
     }, { passive: false });
   }
 
-  setAnimationOptions(options: AnimationDefinition[]) {
+  setAnimationOptions(options: AnimationDefinition[], newAnimationIds: string[] = []) {
     this.selectionList.innerHTML = "";
     this.cardMap.clear();
+    const newSet = new Set(newAnimationIds);
     for (const option of options) {
       const card = document.createElement("div");
       card.className = "ui-option-card";
 
       const previewWrap = document.createElement("div");
       previewWrap.className = "ui-preview";
+
+      if (newSet.has(option.id)) {
+        const newBadge = document.createElement("div");
+        newBadge.className = "ui-new-badge";
+        newBadge.textContent = "NEW";
+        previewWrap.appendChild(newBadge);
+      }
 
       const previewLabel = document.createElement("div");
       previewLabel.className = "ui-preview-label";
@@ -673,8 +681,7 @@ class PreviewRunner {
       playerStart: { x: 20, y: groundY - baseHeight },
       goal: { x: 9999, y: 0, height: 0 },
       platforms: [],
-      obstacles: [],
-      animationIds: []
+      obstacles: []
     };
   }
 }

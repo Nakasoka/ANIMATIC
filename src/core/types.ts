@@ -8,11 +8,12 @@ export interface StageData {
   holes: Array<{ x: number; width: number }>;
   maxSelectionCount: number;
   animationChoices: string[];
+  // 初登場の演出用に、選択画面でNEW表示するアニメーションID。
+  newAnimationIds?: string[];
   playerStart: { x: number; y: number };
   goal: GoalLine;
   platforms: PlatformDefinition[];
   obstacles: FallingSpikeDefinition[];
-  animationIds: string[];
 }
 
 export interface Rect {

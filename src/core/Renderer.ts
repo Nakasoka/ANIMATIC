@@ -84,6 +84,7 @@ export class Renderer {
 
     ctx.fillStyle = "#0b0b10";
     for (const hole of this.stage.holes) {
+      // 穴は地面の下に抜ける黒帯として描画。
       ctx.fillRect(hole.x, this.stage.groundY, hole.width, 50);
     }
 

@@ -202,6 +202,19 @@ canvas {
   color: #e8e8e8;
 }
 
+.ui-new-badge {
+  position: absolute;
+  top: 4px;
+  left: 6px;
+  padding: 2px 6px;
+  font-size: 10px;
+  letter-spacing: 0.5px;
+  border-radius: 6px;
+  background: #ffd166;
+  color: #1a1a1a;
+  font-weight: 700;
+}
+
 .ui-order {
   display: flex;
   flex-wrap: wrap;

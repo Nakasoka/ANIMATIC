@@ -9,16 +9,13 @@ export type AnimationEffect =
   | { type: "move-right"; speed: number }
   | { type: "reverse"; speed: number; downSpeed: number }
   | { type: "crouch" }
-  | { type: "dash"; speed: number }
-  | { type: "grow-shrink" };
+  | { type: "dash"; speed: number };
 
 export interface AnimationDefinition {
   id: string;
   name: string;
-  action: string;
   effect: AnimationEffect;
   durationSec: number;
-  intervalSec: number;
   startDelaySec: number;
   priority: number;
 }
@@ -55,6 +52,7 @@ export const buildAnimationClips = (
   let cursorMs = 0;
 
   for (const definition of getAnimationDefinitionsById(definitionIds)) {
+    // 待機→行動→次の待機…の順で時間を積む。
     const actionDurationMs = definition.durationSec * 1000;
     const startDelaySec =
       options?.startDelayOverrideSec ?? definition.startDelaySec;
@@ -96,6 +94,7 @@ const addEffectClips = (
       return;
     case "double-jump": {
       const totalSec = Math.max(0.2, actionDurationMs / 1000);
+      // 2段ジャンプの発火タイミングと高さを自動で最適化。
       const jumpPlan = findDoubleJumpPlan(totalSec);
       const firstVelocity = jumpPlan.firstVelocity;
       const secondVelocity = jumpPlan.secondVelocity;
@@ -209,24 +208,6 @@ const addEffectClips = (
         ]
       });
       return;
-    case "grow-shrink":
-      clips.push({
-        id: `${definition.id}-${startMs}`,
-        target: "player",
-        startMs,
-        durationMs: actionDurationMs,
-        priority: definition.priority,
-        visuals: [
-          {
-            property: "scale",
-            keyframes: [
-              { time: 0, value: 1 },
-              { time: 0.5, value: 1.25 },
-              { time: 1, value: 1 }
-            ]
-          }
-        ]
-      });
   }
 };
 

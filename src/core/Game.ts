@@ -88,6 +88,7 @@ export class Game {
   }
 
   private update = (dt: number) => {
+    // しゃがみ解除時の挟まりは猶予を入れてからゲームオーバー。
     if (this.state === "crush_pending") {
       this.crushElapsedMs += dt * 1000;
       if (this.crushElapsedMs >= 1000) {
@@ -108,6 +109,7 @@ export class Game {
     if (!effects.velocityOverride) effects.velocityOverride = {};
     const reverseTriggered = effects.directionFlip !== undefined;
     if (reverseTriggered && this.timeMs - this.lastReverseMs > 50) {
+      // 反転は短時間に連続発火しないように制御。
       this.moveDirection *= -1;
       this.lastReverseMs = this.timeMs;
       if (this.player.vy < 0) this.player.vy = Math.abs(this.player.vy);
@@ -285,7 +287,7 @@ export class Game {
       stage.animationChoices.length > 0
         ? getAnimationDefinitionsById(stage.animationChoices)
         : animationDefinitions;
-    this.ui.setAnimationOptions(options);
+    this.ui.setAnimationOptions(options, stage.newAnimationIds ?? []);
     this.ui.setMaxSelectionCount(stage.maxSelectionCount);
     this.ui.setStagePreviewStage(stage);
   }
