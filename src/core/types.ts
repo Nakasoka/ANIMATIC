@@ -1,5 +1,19 @@
 export type EntityId = "player";
 
+export interface EnemyDefinition extends Rect {
+  id: string;
+  type: "bullet_shooter";
+  shootIntervalMs: number;
+  bulletSpeed: number;
+  facing: "left" | "right";
+}
+
+export interface BulletState extends Rect {
+  id: string;
+  vx: number;
+  vy: number;
+}
+
 export interface StageData {
   id: string;
   name: string;
@@ -14,6 +28,7 @@ export interface StageData {
   goal: GoalLine;
   platforms: PlatformDefinition[];
   obstacles: FallingSpikeDefinition[];
+  enemies?: EnemyDefinition[];
 }
 
 export interface Rect {
@@ -70,7 +85,7 @@ export interface VisualTrack {
 }
 
 export interface EffectTrack {
-  property: "x" | "y" | "vx" | "vy" | "dir" | "height" | "gravityScale" | "dashShape";
+  property: "x" | "y" | "vx" | "vy" | "dir" | "height" | "gravityScale" | "dashShape" | "isDefending";
   keyframes: Array<Keyframe<number>>;
 }
 
@@ -86,6 +101,7 @@ export interface EffectState {
   heightOverride?: number;
   gravityScale?: number;
   dashShape?: number;
+  isDefending?: number;
 }
 
 export interface CameraState {

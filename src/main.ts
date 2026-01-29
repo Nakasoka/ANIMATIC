@@ -14,3 +14,4 @@ if (!(uiRoot instanceof HTMLElement)) {
 const ui = new UiController(uiRoot);
 const game = new Game(canvas, ui);
 game.start();
+

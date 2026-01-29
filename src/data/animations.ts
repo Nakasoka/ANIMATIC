@@ -9,7 +9,9 @@ export type AnimationEffect =
   | { type: "move-right"; speed: number }
   | { type: "reverse"; speed: number; downSpeed: number }
   | { type: "crouch" }
-  | { type: "dash"; speed: number };
+  | { type: "crouch" }
+  | { type: "dash"; speed: number }
+  | { type: "defend" };
 
 export interface AnimationDefinition {
   id: string;
@@ -200,6 +202,31 @@ const addEffectClips = (
           },
           {
             property: "dashShape",
+            keyframes: [
+              { time: 0, value: 1 },
+              { time: 1, value: 1 }
+            ]
+          }
+        ]
+      });
+      return;
+    case "defend":
+      clips.push({
+        id: `${definition.id}-${startMs}`,
+        target: "player",
+        startMs,
+        durationMs: actionDurationMs,
+        priority: definition.priority,
+        effects: [
+          {
+            property: "vx",
+            keyframes: [
+              { time: 0, value: 0 },
+              { time: 1, value: 0 }
+            ]
+          },
+          {
+            property: "isDefending",
             keyframes: [
               { time: 0, value: 1 },
               { time: 1, value: 1 }

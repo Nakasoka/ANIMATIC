@@ -11,6 +11,8 @@ import { AnimationSystem } from "../systems/AnimationSystem.js";
 import { PhysicsSystem } from "../systems/PhysicsSystem.js";
 import { ObstacleSystem } from "../systems/ObstacleSystem.js";
 import { PlatformSystem } from "../systems/PlatformSystem.js";
+import { EnemySystem } from "../systems/EnemySystem.js";
+import { BulletSystem } from "../systems/BulletSystem.js";
 import { CameraState, StageData, VisualState } from "./types.js";
 import { UiController } from "../ui/UiController.js";
 
@@ -19,6 +21,7 @@ type GameState =
   | "selecting"
   | "playing"
   | "crush_pending"
+  | "hit_pending"
   | "paused"
   | "cleared"
   | "gameover";
@@ -32,6 +35,8 @@ export class Game {
   private physicsSystem: PhysicsSystem;
   private obstacleSystem: ObstacleSystem;
   private platformSystem: PlatformSystem;
+  private enemySystem: EnemySystem;
+  private bulletSystem: BulletSystem;
   private renderer: Renderer;
   private timeMs = 0;
   private visuals: VisualState = { color: "#f5f5f5", scale: 1 };
@@ -58,6 +63,8 @@ export class Game {
     this.physicsSystem = new PhysicsSystem();
     this.obstacleSystem = new ObstacleSystem(this.stage);
     this.platformSystem = new PlatformSystem(this.stage);
+    this.enemySystem = new EnemySystem(this.stage);
+    this.bulletSystem = new BulletSystem();
     this.renderer = new Renderer(canvas, this.stage);
     this.loop = new Loop(this.update, this.render);
     this.ui = ui;
@@ -89,7 +96,7 @@ export class Game {
 
   private update = (dt: number) => {
     // しゃがみ解除時の挟まりは猶予を入れてからゲームオーバー。
-    if (this.state === "crush_pending") {
+    if (this.state === "crush_pending" || this.state === "hit_pending") {
       this.crushElapsedMs += dt * 1000;
       if (this.crushElapsedMs >= 1000) {
         this.state = "gameover";
@@ -106,6 +113,7 @@ export class Game {
       ...visuals
     };
     this.player.dashShape = Boolean(effects.dashShape);
+    this.player.isDefending = Boolean(effects.isDefending);
     if (!effects.velocityOverride) effects.velocityOverride = {};
     const reverseTriggered = effects.directionFlip !== undefined;
     if (reverseTriggered && this.timeMs - this.lastReverseMs > 50) {
@@ -161,6 +169,18 @@ export class Game {
       this.state = "gameover";
       this.ui.showGameOver();
     }
+
+    // 敵と弾の更新
+    this.enemySystem.update(dt, this.stage, this.player, (enemy) => {
+      this.bulletSystem.spawnBullet(enemy);
+    });
+    const hitBullet = this.bulletSystem.update(dt, this.player, this.stage);
+    if (hitBullet) {
+      this.state = "hit_pending";
+      this.crushElapsedMs = 0;
+      this.player.deadEyes = true;
+      return;
+    }
     if (this.player.x > this.stage.size.width + this.player.width) {
       this.state = "gameover";
       this.ui.showGameOver();
@@ -181,6 +201,7 @@ export class Game {
       this.visuals,
       this.timeMs,
       this.obstacleSystem.getObstacles(),
+      this.bulletSystem.getBullets(),
       this.platformSystem.getActivePlatforms(),
       this.camera
     );
@@ -259,6 +280,7 @@ export class Game {
     this.applySelectionOptions(this.stage);
     this.renderer = new Renderer(this.canvas, this.stage);
     this.platformSystem = new PlatformSystem(this.stage);
+    this.enemySystem = new EnemySystem(this.stage);
     this.reset();
   }
 
@@ -279,6 +301,8 @@ export class Game {
     this.player.reset(this.stage.playerStart.x, this.stage.playerStart.y);
     this.obstacleSystem.reset(this.stage);
     this.platformSystem.reset(this.stage);
+    this.enemySystem.reset(this.stage);
+    this.bulletSystem.reset();
     this.resetCamera();
   }
 

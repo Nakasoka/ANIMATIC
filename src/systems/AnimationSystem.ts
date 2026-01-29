@@ -12,7 +12,7 @@ type PriorityMap = Record<string, number>;
 export class AnimationSystem {
   private previousTimeMs = 0;
 
-  constructor(private clips: AnimationClip[]) {}
+  constructor(private clips: AnimationClip[]) { }
 
   sample(timeMs: number): { visuals: Partial<VisualState>; effects: EffectState } {
     const visuals: Partial<VisualState> = {};
@@ -72,6 +72,8 @@ export class AnimationSystem {
               effects.gravityScale = value;
             } else if (track.property === "dashShape") {
               effects.dashShape = value;
+            } else if (track.property === "isDefending") {
+              effects.isDefending = value;
             } else {
               if (!effects.velocityOverride) effects.velocityOverride = {};
               const axis = track.property === "vx" ? "x" : "y";

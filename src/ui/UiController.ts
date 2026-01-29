@@ -2,7 +2,7 @@
 import { AnimationSystem } from "../systems/AnimationSystem.js";
 import { PhysicsSystem } from "../systems/PhysicsSystem.js";
 import { Player } from "../entities/Player.js";
-import { CameraState, EffectState, StageData } from "../core/types.js";
+import { CameraState, EffectState, StageData, BulletState } from "../core/types.js";
 import { stageLinks, stageNodes } from "../data/stageMap.js";
 import { StageSelectView } from "./StageSelectView.js";
 
@@ -499,6 +499,10 @@ class PreviewRunner {
         0.8,
         this.definition.durationSec + this.preActionDelay + this.postActionDelay
       ) * 1000;
+
+    // 弾のリセット
+    this.bullets = [];
+    this.hasFiredBullet = false;
   }
 
   private tick = (time: number) => {
@@ -514,6 +518,15 @@ class PreviewRunner {
       return;
     }
 
+    // 弾の発射タイミング: アクション開始から少し経ったところ
+    // definition.startDelaySec は使わず、preActionDelay (0.5s) を基準にする
+    // Defend発動(0.5s時点)に合わせて弾を飛ばす
+    // 弾の速度150、距離(width-20) - 20(player) ≈ 160px くらい？ -> 約1秒かかる？
+    // Defend時間は1.5秒あるので、もっと早く打って良い。0.6秒時点くらいで生成
+    if (this.definition.id === "defend" && !this.hasFiredBullet && this.elapsedMs > 600) {
+      this.spawnBullet();
+    }
+
     const actionTimeMs = this.elapsedMs - this.preActionDelay * 1000;
     let effects: EffectState = {};
     const actionEndMs = this.definition.durationSec * 1000;
@@ -521,6 +534,7 @@ class PreviewRunner {
       effects = this.animationSystem.sample(actionTimeMs).effects;
     }
     this.player.dashShape = Boolean(effects.dashShape);
+    this.player.isDefending = Boolean(effects.isDefending);
     if (!effects.velocityOverride) effects.velocityOverride = {};
     const reverseTriggered = effects.directionFlip !== undefined;
     if (reverseTriggered && this.elapsedMs - this.lastReverseMs > 50) {
@@ -547,6 +561,10 @@ class PreviewRunner {
       this.stage,
       this.stage.platforms
     );
+
+    // 弾の更新
+    this.updateBullets(dt);
+
     if (crushed) {
       this.reset();
       this.draw();
@@ -586,6 +604,9 @@ class PreviewRunner {
     ctx.lineTo(this.stage.size.width, this.stage.groundY);
     ctx.stroke();
 
+    // 弾の描画
+    this.drawBullets(ctx);
+
     ctx.strokeStyle = "#f5f5f5";
     ctx.lineWidth = 2;
     const drawX = this.player.x;
@@ -611,55 +632,170 @@ class PreviewRunner {
       }
       ctx.closePath();
       ctx.stroke();
+    } else if (this.player.isDefending) {
+      // 守るアクションのビジュアル: 正六角形、40x40、中央配置
+      const defWidth = 40;
+      const defHeight = 40;
+
+      // プレイヤーに対して左右中央揃え
+      const defX = drawX + drawWidth / 2 - defWidth / 2;
+      // プレイヤーの下端に合わせる
+      const defY = drawY + drawHeight - defHeight;
+
+      const cx = defX + defWidth / 2;
+      const cy = defY + defHeight / 2;
+      const r = defWidth / 2;
+
+      // 形状: 六角形 (上下が平ら)
+      ctx.beginPath();
+      for (let i = 0; i < 6; i++) {
+        const angle = (Math.PI * 2 * i) / 6;
+        const px = cx + Math.cos(angle) * r;
+        const py = cy + Math.sin(angle) * r;
+        if (i === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      }
+      ctx.closePath();
+      ctx.stroke();
+
+      // 閉じた目: 2本の水平線
+      const eyeY = defY + defHeight * 0.35; // 高さ40pxに合わせて調整
+      const eyeW = 6;
+      const eyeOffset = 3;
+
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      // 左目
+      ctx.moveTo(cx - eyeOffset - eyeW, eyeY);
+      ctx.lineTo(cx - eyeOffset, eyeY);
+      // 右目
+      ctx.moveTo(cx + eyeOffset, eyeY);
+      ctx.lineTo(cx + eyeOffset + eyeW, eyeY);
+      ctx.stroke();
     } else {
       ctx.strokeRect(drawX, drawY, drawWidth, drawHeight);
     }
 
-    ctx.fillStyle = "#f5f5f5";
-    const eyeRadiusX = Math.max(2, drawWidth * 0.05);
-    const eyeRadiusY = Math.max(2, this.player.baseHeight * 0.08);
-    const eyeY = drawY + drawHeight * 0.38;
-    const eyeBaseOffsetX = drawWidth * 0.26;
-    const gaze = Math.max(-1, Math.min(1, this.player.vx / 120));
-    const eyeShift =
-      gaze * drawWidth * 0.06 + (this.player.dashShape && dashDir < 0 ? 15 : 0);
-    const skewAtEye =
-      skewX !== 0 ? ((drawHeight - (eyeY - drawY)) / drawHeight) * skewX : 0;
-    if (this.player.dashShape) {
-      const leftX = drawX + eyeBaseOffsetX + eyeShift + skewAtEye;
-      const rightX = drawX + drawWidth - eyeBaseOffsetX + eyeShift + skewAtEye;
-      const slant = eyeRadiusY * 0.9;
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(leftX - eyeRadiusX, eyeY - slant);
-      ctx.lineTo(leftX + eyeRadiusX, eyeY + slant);
-      ctx.moveTo(rightX - eyeRadiusX, eyeY + slant);
-      ctx.lineTo(rightX + eyeRadiusX, eyeY - slant);
-      ctx.stroke();
-    } else {
-      ctx.beginPath();
-      ctx.ellipse(
-        drawX + eyeBaseOffsetX + eyeShift + skewAtEye,
-        eyeY,
-        eyeRadiusX,
-        eyeRadiusY,
-        0,
-        0,
-        Math.PI * 2
-      );
-      ctx.ellipse(
-        drawX + drawWidth - eyeBaseOffsetX + eyeShift + skewAtEye,
-        eyeY,
-        eyeRadiusX,
-        eyeRadiusY,
-        0,
-        0,
-        Math.PI * 2
-      );
-      ctx.fill();
+    if (!this.player.isDefending) {
+      ctx.fillStyle = "#f5f5f5";
+      const eyeRadiusX = Math.max(2, drawWidth * 0.05);
+      const eyeRadiusY = Math.max(2, this.player.baseHeight * 0.08);
+      const eyeY = drawY + drawHeight * 0.38;
+      const eyeBaseOffsetX = drawWidth * 0.26;
+      const gaze = Math.max(-1, Math.min(1, this.player.vx / 120));
+      const eyeShift =
+        gaze * drawWidth * 0.06 + (this.player.dashShape && dashDir < 0 ? 15 : 0);
+      const skewAtEye =
+        skewX !== 0 ? ((drawHeight - (eyeY - drawY)) / drawHeight) * skewX : 0;
+      if (this.player.dashShape) {
+        const leftX = drawX + eyeBaseOffsetX + eyeShift + skewAtEye;
+        const rightX = drawX + drawWidth - eyeBaseOffsetX + eyeShift + skewAtEye;
+        const slant = eyeRadiusY * 0.9;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(leftX - eyeRadiusX, eyeY - slant);
+        ctx.lineTo(leftX + eyeRadiusX, eyeY + slant);
+        ctx.moveTo(rightX - eyeRadiusX, eyeY + slant);
+        ctx.lineTo(rightX + eyeRadiusX, eyeY - slant);
+        ctx.stroke();
+      } else {
+        ctx.beginPath();
+        ctx.ellipse(
+          drawX + eyeBaseOffsetX + eyeShift + skewAtEye,
+          eyeY,
+          eyeRadiusX,
+          eyeRadiusY,
+          0,
+          0,
+          Math.PI * 2
+        );
+        ctx.ellipse(
+          drawX + drawWidth - eyeBaseOffsetX + eyeShift + skewAtEye,
+          eyeY,
+          eyeRadiusX,
+          eyeRadiusY,
+          0,
+          0,
+          Math.PI * 2
+        );
+        ctx.fill();
+      }
     }
     ctx.restore();
   }
+
+  // --- Bullet Preview Logic ---
+  private bullets: BulletState[] = [];
+  private hasFiredBullet = false;
+
+  private spawnBullet() {
+    // 画面右端から左へ飛ぶ弾を生成
+    // Defendアクションのプレビュー時のみ使用する
+    if (this.definition.id !== "defend") return;
+
+    const bullet: BulletState = {
+      id: Math.random().toString(),
+      x: this.stage.size.width - 20,
+      y: this.player.y + this.player.height / 2 - 5,
+      width: 10,
+      height: 10,
+      vx: -150, // 左へ移動
+      vy: 0
+    };
+    this.bullets.push(bullet);
+    this.hasFiredBullet = true;
+  }
+
+  private updateBullets(dt: number) {
+    // 弾の移動
+    for (const bullet of this.bullets) {
+      bullet.x += bullet.vx * dt;
+      bullet.y += bullet.vy * dt;
+    }
+
+    // 衝突判定 (簡易AABB)
+    // プレイヤーの矩形
+    const pRect = {
+      x: this.player.x,
+      y: this.player.y,
+      width: this.player.width,
+      height: this.player.height
+    };
+
+    // 弾の削除・跳ね返し
+    for (let i = this.bullets.length - 1; i >= 0; i--) {
+      const b = this.bullets[i];
+      // プレイヤーとの衝突チェック
+      if (
+        b.x < pRect.x + pRect.width &&
+        b.x + b.width > pRect.x &&
+        b.y < pRect.y + pRect.height &&
+        b.y + b.height > pRect.y
+      ) {
+        // 当たった時
+        if (this.player.isDefending) {
+          // 守っているなら弾く（消す）
+          this.bullets.splice(i, 1);
+        } else {
+          // Defend中でないなら何もしない
+        }
+      }
+      // 画面外に出たら消す
+      else if (b.x + b.width < 0) {
+        this.bullets.splice(i, 1);
+      }
+    }
+  }
+
+  private drawBullets(ctx: CanvasRenderingContext2D) {
+    ctx.fillStyle = "#ffd166";
+    for (const bullet of this.bullets) {
+      ctx.beginPath();
+      ctx.arc(bullet.x + bullet.width / 2, bullet.y + bullet.height / 2, bullet.width / 2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+  // ----------------------------
 
   private createStage(): StageData {
     const groundY =
@@ -685,9 +821,3 @@ class PreviewRunner {
     };
   }
 }
-
-
-
-
-
-

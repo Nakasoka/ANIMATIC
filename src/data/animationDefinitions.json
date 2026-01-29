@@ -2,7 +2,10 @@
   {
     "id": "jump",
     "name": "ジャンプ",
-    "effect": { "type": "jump", "power": 1 },
+    "effect": {
+      "type": "jump",
+      "power": 1
+    },
     "durationSec": 1,
     "startDelaySec": 0.5,
     "priority": 5
@@ -10,7 +13,10 @@
   {
     "id": "double-jump",
     "name": "2段ジャンプ",
-    "effect": { "type": "double-jump", "power": 1 },
+    "effect": {
+      "type": "double-jump",
+      "power": 1
+    },
     "durationSec": 1.7,
     "startDelaySec": 0.5,
     "priority": 5
@@ -18,7 +24,9 @@
   {
     "id": "stop",
     "name": "ストップ",
-    "effect": { "type": "stop" },
+    "effect": {
+      "type": "stop"
+    },
     "durationSec": 2,
     "startDelaySec": 0.5,
     "priority": 5
@@ -26,7 +34,10 @@
   {
     "id": "move",
     "name": "進む",
-    "effect": { "type": "move-right", "speed": 140 },
+    "effect": {
+      "type": "move-right",
+      "speed": 140
+    },
     "durationSec": 1,
     "startDelaySec": 0.5,
     "priority": 5
@@ -34,7 +45,11 @@
   {
     "id": "reverse",
     "name": "反転",
-    "effect": { "type": "reverse", "speed": 110, "downSpeed": 300 },
+    "effect": {
+      "type": "reverse",
+      "speed": 110,
+      "downSpeed": 300
+    },
     "durationSec": 0.5,
     "startDelaySec": 0.5,
     "priority": 5
@@ -42,7 +57,9 @@
   {
     "id": "crouch",
     "name": "しゃがむ",
-    "effect": { "type": "crouch" },
+    "effect": {
+      "type": "crouch"
+    },
     "durationSec": 1.5,
     "startDelaySec": 0.5,
     "priority": 5
@@ -50,10 +67,22 @@
   {
     "id": "dash",
     "name": "ダッシュ",
-    "effect": { "type": "dash", "speed": 220 },
+    "effect": {
+      "type": "dash",
+      "speed": 220
+    },
     "durationSec": 1,
+    "startDelaySec": 0.5,
+    "priority": 5
+  },
+  {
+    "id": "defend",
+    "name": "守る",
+    "effect": {
+      "type": "defend"
+    },
+    "durationSec": 1.5,
     "startDelaySec": 0.5,
     "priority": 5
   }
 ]
-

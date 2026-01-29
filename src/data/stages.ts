@@ -267,5 +267,50 @@ export const stages: StageData[] = [
       }
     ],
 
+  },
+  {
+    id: "2-1",
+    name: "2-1",
+    size: { width: 800, height: 450 },
+    groundY: 400,
+    holes: [
+      { x: 280, width: 100 }
+    ],
+    maxSelectionCount: 6,
+    animationChoices: ["jump", "move", "reverse", "defend"],
+    newAnimationIds: ["defend"],
+    playerStart: { x: 80, y: 360 },
+    goal: { x: 780, y: 360, height: 40 },
+    platforms: [
+      { x: 0, y: 220, width: 800, height: 20 }, // 上の境界
+      { x: 0, y: 320, width: 140, height: 20 },
+      { x: 260, y: 320, width: 280, height: 20 },
+      { x: 680, y: 320, width: 120, height: 20 }
+    ],
+    enemies: [
+      {
+        id: "shooter-1",
+        type: "bullet_shooter",
+        x: 700,
+        y: 280, // 上の足場の上
+        width: 28,
+        height: 40,
+        shootIntervalMs: 3000,
+        bulletSpeed: 200,
+        facing: "left"
+      },
+      {
+        id: "shooter-2",
+        type: "bullet_shooter",
+        x: 500,
+        y: 360, // ゴールの先、地面の上
+        width: 28,
+        height: 40,
+        shootIntervalMs: 3000,
+        bulletSpeed: 200,
+        facing: "left"
+      }
+    ],
+    obstacles: []
   }
 ];
