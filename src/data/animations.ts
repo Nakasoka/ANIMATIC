@@ -9,9 +9,9 @@ export type AnimationEffect =
   | { type: "move-right"; speed: number }
   | { type: "reverse"; speed: number; downSpeed: number }
   | { type: "crouch" }
-  | { type: "crouch" }
   | { type: "dash"; speed: number }
-  | { type: "defend" };
+  | { type: "defend" }
+  | { type: "dive" };
 
 export interface AnimationDefinition {
   id: string;
@@ -45,6 +45,8 @@ const DOUBLE_JUMP_SECOND_START_STEP = 0.04;
 const DOUBLE_JUMP_APEX_RATIO = 0.7;
 const DOUBLE_JUMP_SECOND_HEIGHT_RATIO = 0.6;
 const DASH_HEIGHT = 35;
+const NORMAL_HEIGHT = 40;
+const DIVE_HEIGHT = 20;
 
 export const buildAnimationClips = (
   definitionIds: string[],
@@ -231,6 +233,70 @@ const addEffectClips = (
               { time: 0, value: 1 },
               { time: 1, value: 1 }
             ]
+          }
+        ]
+      });
+      return;
+    case "dive":
+      clips.push({
+        id: `${definition.id}-${startMs}`,
+        target: "player",
+        startMs,
+        durationMs: actionDurationMs,
+        priority: definition.priority,
+        effects: [
+          {
+            property: "vx",
+            keyframes: [
+              { time: 0, value: 0 },
+              { time: 1, value: 0 }
+            ]
+          },
+          {
+            property: "height",
+            keyframes: [
+              { time: 0, value: NORMAL_HEIGHT },
+              { time: 0.15, value: DIVE_HEIGHT },  // 潰れる (0.3s)
+              { time: 0.7, value: DIVE_HEIGHT },   // 通過中維持 (1.4sまで)
+              { time: 1, value: NORMAL_HEIGHT }    // 0.6秒かけて滑らかに復元
+            ]
+          },
+          {
+            property: "passThroughPlatforms",
+            keyframes: [
+              { time: 0, value: 0 },
+              { time: 0.14, value: 1 },             // 縮みきる直前から通り抜け開始
+              { time: 0.8, value: 1 },              // 足場を抜けるまで維持
+              { time: 1, value: 0 }
+            ]
+          },
+          {
+            property: "gravityScale",
+            keyframes: [
+              { time: 0, value: 1 },
+              { time: 0.14, value: 2.5 },           // 通り抜け開始と同時に重力加速
+              { time: 0.8, value: 2.5 },
+              { time: 1, value: 1 }
+            ]
+          }
+        ]
+      });
+
+      // 最初の 300ms (縮小中) だけ位置を完全に固定する
+      clips.push({
+        id: `${definition.id}-lock-${startMs}`,
+        target: "player",
+        startMs,
+        durationMs: 300,
+        priority: definition.priority + 1,
+        effects: [
+          {
+            property: "vx",
+            keyframes: [{ time: 0, value: 0 }, { time: 1, value: 0 }]
+          },
+          {
+            property: "vy",
+            keyframes: [{ time: 0, value: 0 }, { time: 1, value: 0 }]
           }
         ]
       });

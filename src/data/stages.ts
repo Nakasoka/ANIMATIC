@@ -312,5 +312,69 @@ export const stages: StageData[] = [
       }
     ],
     obstacles: []
+  },
+  {
+    id: "2-2",
+    name: "2-2",
+    size: { width: 800, height: 450 },
+    groundY: 420,
+    holes: [],
+    maxSelectionCount: 6,
+    animationChoices: ["move", "reverse", "defend", "dive"],
+    newAnimationIds: ["dive"],
+    playerStart: { x: 40, y: 80 },
+    goal: { x: 720, y: 380, height: 40 },
+    platforms: [
+      { x: 0, y: 120, width: 800, height: 20 },
+      { x: 0, y: 220, width: 800, height: 20 },
+      { x: 0, y: 320, width: 800, height: 20 }
+    ],
+    enemies: [
+      {
+        id: "2-2-shooter-mid",
+        type: "bullet_shooter",
+        x: 340,
+        y: 180,
+        width: 28,
+        height: 40,
+        shootIntervalMs: 2500,
+        bulletSpeed: 200,
+        facing: "left"
+      },
+      {
+        id: "2-2-shooter-low-left",
+        type: "bullet_shooter",
+        x: 120,
+        y: 280,
+        width: 28,
+        height: 40,
+        shootIntervalMs: 2500,
+        bulletSpeed: 200,
+        facing: "right"
+      },
+      {
+        id: "2-2-shooter-low-right",
+        type: "bullet_shooter",
+        x: 520,
+        y: 280,
+        width: 28,
+        height: 40,
+        shootIntervalMs: 2500,
+        bulletSpeed: 200,
+        facing: "left"
+      },
+      {
+        id: "2-2-shooter-ground",
+        type: "bullet_shooter",
+        x: 300,
+        y: 380,
+        width: 28,
+        height: 40,
+        shootIntervalMs: 2500,
+        bulletSpeed: 200,
+        facing: "right"
+      }
+    ],
+    obstacles: []
   }
 ];

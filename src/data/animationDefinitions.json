@@ -84,5 +84,15 @@
     "durationSec": 1.5,
     "startDelaySec": 0.5,
     "priority": 5
+  },
+  {
+    "id": "dive",
+    "name": "潜る",
+    "effect": {
+      "type": "dive"
+    },
+    "durationSec": 2.0,
+    "startDelaySec": 0.5,
+    "priority": 5
   }
 ]

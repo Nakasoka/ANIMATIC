@@ -174,6 +174,23 @@ export class Game {
     this.enemySystem.update(dt, this.stage, this.player, (enemy) => {
       this.bulletSystem.spawnBullet(enemy);
     });
+
+    // 敵本体との衝突判定
+    if (this.stage.enemies && this.state === "playing") {
+      for (const enemy of this.stage.enemies) {
+        if (
+          this.player.x < enemy.x + enemy.width &&
+          this.player.x + this.player.width > enemy.x &&
+          this.player.y < enemy.y + enemy.height &&
+          this.player.y + this.player.height > enemy.y
+        ) {
+          this.state = "hit_pending";
+          this.crushElapsedMs = 0;
+          this.player.deadEyes = true;
+          return;
+        }
+      }
+    }
     const hitBullet = this.bulletSystem.update(dt, this.player, this.stage);
     if (hitBullet) {
       this.state = "hit_pending";
@@ -295,6 +312,7 @@ export class Game {
 
   private reset() {
     this.timeMs = 0;
+    this.animationSystem.reset();
     this.moveDirection = 1;
     this.lastReverseMs = -Infinity;
     this.crushElapsedMs = 0;

@@ -87,6 +87,10 @@ export class AnimationSystem {
     this.previousTimeMs = timeMs;
     return { visuals, effects };
   }
+
+  reset() {
+    this.previousTimeMs = 0;
+  }
 }
 
 const sampleTrack = (track: VisualTrack, t: number): string | number => {

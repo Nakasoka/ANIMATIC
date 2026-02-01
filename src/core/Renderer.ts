@@ -34,7 +34,7 @@ export class Renderer {
     const { ctx } = this;
     ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-    this.renderStageBase(ctx, obstacles, bullets, platforms ?? this.stage.platforms, camera);
+    this.renderStageBase(ctx, obstacles, bullets, platforms ?? this.stage.platforms, camera, player);
     this.renderPlayer(ctx, player, visuals, camera);
 
     ctx.fillStyle = "#e6e6e6";
@@ -45,17 +45,17 @@ export class Renderer {
 
   renderStagePreview(ctx: CanvasRenderingContext2D, camera: CameraState) {
     ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    const previewPlayer = new Player(
+      this.stage.playerStart.x,
+      this.stage.playerStart.y
+    );
     const previewObstacles: ObstacleState[] = this.stage.obstacles.map(
       (obstacle) => ({
         ...obstacle,
         state: "idle"
       })
     );
-    this.renderStageBase(ctx, previewObstacles, [], this.stage.platforms, camera);
-    const previewPlayer = new Player(
-      this.stage.playerStart.x,
-      this.stage.playerStart.y
-    );
+    this.renderStageBase(ctx, previewObstacles, [], this.stage.platforms, camera, previewPlayer);
     this.renderPlayer(ctx, previewPlayer, {
       color: previewPlayer.baseColor,
       scale: 1
@@ -67,7 +67,8 @@ export class Renderer {
     obstacles: ObstacleState[],
     bullets: BulletState[],
     platforms: PlatformDefinition[],
-    camera: CameraState
+    camera: CameraState,
+    targetPlayer?: Player
   ) {
     ctx.save();
     ctx.scale(camera.scale, camera.scale);
@@ -121,6 +122,11 @@ export class Renderer {
     // 敵キャラの描画
     if (this.stage.enemies) {
       for (const enemy of this.stage.enemies) {
+        // プレイヤーがいる場合はその位置に基づいて向きを決定
+        const facing = targetPlayer
+          ? (targetPlayer.x < enemy.x ? "left" : "right")
+          : enemy.facing;
+
         ctx.strokeStyle = "#f5f5f5";
         ctx.lineWidth = 2;
         ctx.beginPath();
@@ -143,7 +149,7 @@ export class Renderer {
         const totalEyeWidth = eyeWidth * 2 + eyeSpacing;
         const centerX = enemy.x + enemy.width / 2;
         // 向きに応じて中心から左右にずらす
-        const offset = enemy.facing === "left" ? -3 : 3;
+        const offset = facing === "left" ? -3 : 3;
         const eyeBaseX = centerX + offset - totalEyeWidth / 2;
 
         ctx.fillRect(eyeBaseX, eyeY, eyeWidth, 2); // 左目

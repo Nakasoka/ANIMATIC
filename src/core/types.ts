@@ -85,7 +85,7 @@ export interface VisualTrack {
 }
 
 export interface EffectTrack {
-  property: "x" | "y" | "vx" | "vy" | "dir" | "height" | "gravityScale" | "dashShape" | "isDefending";
+  property: "x" | "y" | "vx" | "vy" | "dir" | "height" | "gravityScale" | "dashShape" | "isDefending" | "passThroughPlatforms";
   keyframes: Array<Keyframe<number>>;
 }
 
@@ -102,6 +102,7 @@ export interface EffectState {
   gravityScale?: number;
   dashShape?: number;
   isDefending?: number;
+  passThroughPlatforms?: number;
 }
 
 export interface CameraState {

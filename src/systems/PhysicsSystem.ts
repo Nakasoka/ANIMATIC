@@ -48,8 +48,8 @@ export class PhysicsSystem {
     player.y += player.vy * dt;
 
     const activePlatforms = platforms ?? stage.platforms;
-    this.resolvePlatforms(previousX, previousY, player, activePlatforms);
-    this.resolveGround(previousY, player, stage);
+    this.resolvePlatforms(previousX, previousY, player, activePlatforms, effects);
+    this.resolveGround(player, stage);
     return crushed;
   }
 
@@ -57,8 +57,10 @@ export class PhysicsSystem {
     previousX: number,
     previousY: number,
     player: Player,
-    platforms: PlatformDefinition[]
+    platforms: PlatformDefinition[],
+    effects: EffectState
   ) {
+    if (effects.passThroughPlatforms !== undefined && effects.passThroughPlatforms > 0.5) return;
     const playerLeft = player.x;
     const playerRight = player.x + player.width;
     const playerTop = player.y;
@@ -104,7 +106,7 @@ export class PhysicsSystem {
     }
   }
 
-  private resolveGround(previousY: number, player: Player, stage: StageData) {
+  private resolveGround(player: Player, stage: StageData) {
     const floor = stage.groundY - player.height;
     const playerLeft = player.x;
     const playerRight = player.x + player.width;
@@ -112,7 +114,7 @@ export class PhysicsSystem {
       (hole) => playerLeft >= hole.x && playerRight <= hole.x + hole.width
     );
 
-    if (!overHole && player.y > floor && previousY <= floor) {
+    if (!overHole && player.y > floor) {
       player.y = floor;
       if (player.vy > 0) player.vy = 0;
     }
